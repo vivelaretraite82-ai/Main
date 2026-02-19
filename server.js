@@ -3,6 +3,8 @@ const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 const nodemailer = require('nodemailer');
 const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const DB_PATH = path.join(__dirname, 'vivelaretraite.db');
@@ -45,14 +47,52 @@ db.serialize(() => {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      prenom TEXT,
+      nom TEXT,
+      telephone TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS reservations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      sortie_id INTEGER NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, sortie_id),
+      FOREIGN KEY(user_id) REFERENCES users(id),
+      FOREIGN KEY(sortie_id) REFERENCES sorties(id)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS comments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      sortie_id INTEGER NOT NULL,
+      text TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(user_id) REFERENCES users(id),
+      FOREIGN KEY(sortie_id) REFERENCES sorties(id)
+    )
+  `);
 });
 
 app.use(cors({
   origin: ['http://localhost:3000', 'https://vivelaretraite82-ai.github.io'],
-  methods: ['GET', 'POST']
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 app.use(express.static(__dirname));
 
@@ -157,6 +197,117 @@ app.post('/contact', (req, res) => {
   stmt.finalize();
 });
 
+function signToken(user) {
+  const payload = { uid: user.id, email: user.email };
+  const secret = process.env.JWT_SECRET || 'dev-secret';
+  return jwt.sign(payload, secret, { expiresIn: '15d' });
+}
+
+function auth(req, res, next) {
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+  if (!token) return res.status(401).json({ error: 'unauthorized' });
+  try {
+    const secret = process.env.JWT_SECRET || 'dev-secret';
+    const data = jwt.verify(token, secret);
+    req.user = data;
+    next();
+  } catch {
+    res.status(401).json({ error: 'unauthorized' });
+  }
+}
+
+app.post('/auth/signup', (req, res) => {
+  const { email, password, prenom, nom, telephone } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'email_password_required' });
+  const hash = bcrypt.hashSync(password, 10);
+  const stmt = db.prepare('INSERT INTO users (email, password_hash, prenom, nom, telephone) VALUES (?, ?, ?, ?, ?)');
+  stmt.run(email.trim().toLowerCase(), hash, prenom || null, nom || null, telephone || null, function(err) {
+    if (err) return res.status(400).json({ error: 'email_exists' });
+    const user = { id: this.lastID, email };
+    const token = signToken(user);
+    res.json({ token, user: { id: user.id, email, prenom, nom, telephone } });
+  });
+  stmt.finalize();
+});
+
+app.post('/auth/login', (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'email_password_required' });
+  db.get('SELECT id, email, password_hash, prenom, nom, telephone FROM users WHERE email = ?', [email.trim().toLowerCase()], (err, row) => {
+    if (err || !row) return res.status(401).json({ error: 'invalid_credentials' });
+    const ok = bcrypt.compareSync(password, row.password_hash);
+    if (!ok) return res.status(401).json({ error: 'invalid_credentials' });
+    const token = signToken(row);
+    res.json({ token, user: { id: row.id, email: row.email, prenom: row.prenom, nom: row.nom, telephone: row.telephone } });
+  });
+});
+
+app.get('/me', auth, (req, res) => {
+  db.get('SELECT id, email, prenom, nom, telephone, created_at FROM users WHERE id = ?', [req.user.uid], (err, row) => {
+    if (err || !row) return res.status(404).json({ error: 'not_found' });
+    res.json(row);
+  });
+});
+
+app.get('/me/reservations', auth, (req, res) => {
+  const q = `
+    SELECT r.id, r.created_at, s.id AS sortie_id, s.titre, s.date_iso, s.lieu, s.description
+    FROM reservations r
+    JOIN sorties s ON s.id = r.sortie_id
+    WHERE r.user_id = ?
+    ORDER BY r.created_at DESC
+  `;
+  db.all(q, [req.user.uid], (err, rows) => {
+    if (err) return res.status(500).json({ error: 'db_error' });
+    res.json(rows);
+  });
+});
+
+app.post('/sorties/:id/reserver', auth, (req, res) => {
+  const sortieId = parseInt(req.params.id, 10);
+  if (!sortieId) return res.status(400).json({ error: 'invalid_sortie' });
+  const stmt = db.prepare('INSERT OR IGNORE INTO reservations (user_id, sortie_id) VALUES (?, ?)');
+  stmt.run(req.user.uid, sortieId, (err) => {
+    if (err) return res.status(500).json({ error: 'db_error' });
+    res.json({ ok: true });
+  });
+  stmt.finalize();
+});
+
+app.post('/sorties/:id/comment', auth, (req, res) => {
+  const sortieId = parseInt(req.params.id, 10);
+  const { text } = req.body;
+  if (!sortieId || !text) return res.status(400).json({ error: 'invalid_input' });
+  const q = 'SELECT 1 FROM reservations WHERE user_id = ? AND sortie_id = ?';
+  db.get(q, [req.user.uid, sortieId], (err, row) => {
+    if (err) return res.status(500).json({ error: 'db_error' });
+    if (!row) return res.status(403).json({ error: 'not_reserved' });
+    const stmt = db.prepare('INSERT INTO comments (user_id, sortie_id, text) VALUES (?, ?, ?)');
+    stmt.run(req.user.uid, sortieId, text.trim(), (e) => {
+      if (e) return res.status(500).json({ error: 'db_error' });
+      res.json({ ok: true });
+    });
+    stmt.finalize();
+  });
+});
+
+app.get('/api/comments', (req, res) => {
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  const iso = sixMonthsAgo.toISOString();
+  const q = `
+    SELECT c.id, c.text, c.created_at, s.titre, s.id AS sortie_id
+    FROM comments c
+    JOIN sorties s ON s.id = c.sortie_id
+    WHERE c.created_at >= ?
+    ORDER BY c.created_at DESC
+  `;
+  db.all(q, [iso], (err, rows) => {
+    if (err) return res.status(500).json({ error: 'db_error' });
+    res.json(rows);
+  });
+});
 app.get('/api/registrations', (req, res) => {
   db.all('SELECT id, prenom, nom, email, telephone, ville, naissance, preferences, created_at FROM registrations ORDER BY created_at DESC', (err, rows) => {
     if (err) return res.status(500).json({ error: 'db_error' });

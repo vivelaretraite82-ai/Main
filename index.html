@@ -22,6 +22,19 @@
     --border: #E0D8CC;
   }
 
+  body[data-theme="dark"] {
+    --cream: #101411;
+    --warm-white: #141A16;
+    --text: #F3F3F1;
+    --text-light: #B8C2BA;
+    --sage: #98C2A0;
+    --sage-light: #45594B;
+    --sage-dark: #B7E0BC;
+    --gold: #D8C48A;
+    --gold-light: #4B4330;
+    --border: #283128;
+  }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   html { scroll-behavior: smooth; }
@@ -43,7 +56,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 1.4rem 4rem;
-    background: rgba(250,247,242,0.92);
+    background: rgba(15,18,16,0.92);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
     transition: padding .3s;
@@ -63,6 +76,27 @@
     display: flex;
     gap: 2.4rem;
     list-style: none;
+  }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+  }
+
+  .theme-toggle {
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(0,0,0,0.02);
+    padding: .25rem .85rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .78rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    color: var(--text-light);
   }
 
   .nav-links a {
@@ -1028,15 +1062,21 @@
 <!-- NAV -->
 <nav>
   <div class="nav-logo">Vive la Retraite</div>
-  <ul class="nav-links">
-    <li><a href="#activites">Activités</a></li>
-    <li><a href="#sorties">Sorties</a></li>
-    <li><a href="#comment">Comment ça marche</a></li>
-    <li><a href="#temoignages">Témoignages</a></li>
-    <li><a href="#faq">FAQ</a></li>
-    <li><a href="#inscription">Inscription</a></li>
-    <li><a href="#contact" class="nav-cta">Contact</a></li>
-  </ul>
+  <div class="nav-right">
+    <ul class="nav-links">
+      <li><a href="#activites">Activités</a></li>
+      <li><a href="#sorties">Sorties</a></li>
+      <li><a href="#comment">Comment ça marche</a></li>
+      <li><a href="#temoignages">Témoignages</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a href="#inscription">Inscription</a></li>
+      <li><a href="#contact" class="nav-cta">Contact</a></li>
+    </ul>
+    <button type="button" class="theme-toggle" aria-label="Changer de thème">
+      <span class="theme-toggle-icon">🌙</span>
+      <span class="theme-toggle-label">Sombre</span>
+    </button>
+  </div>
 </nav>
 
 <div id="feedback-banner" class="feedback-banner"></div>
@@ -1085,7 +1125,7 @@
       <div class="hero-badge">
         <div class="badge-icon">🌟</div>
         <div class="badge-text">
-          <strong>+121 membres</strong>
+          <strong>+21 membres</strong>
           <span>actifs cette année</span>
         </div>
       </div>
@@ -1096,11 +1136,11 @@
 <!-- STATS -->
 <div class="stats">
   <div class="stat-item reveal">
-    <div class="stat-num">248</div>
+    <div class="stat-num">19</div>
     <div class="stat-label">Sorties organisées</div>
   </div>
   <div class="stat-item reveal">
-    <div class="stat-num">121</div>
+    <div class="stat-num">21</div>
     <div class="stat-label">Membres heureux</div>
   </div>
   <div class="stat-item reveal">
@@ -1530,7 +1570,6 @@
 </div>
 
 <script>
-  // Intersection Observer for reveal animations
   const reveals = document.querySelectorAll('.reveal');
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry, i) => {
@@ -1542,7 +1581,6 @@
   }, { threshold: 0.12 });
   reveals.forEach(el => observer.observe(el));
 
-  // FAQ toggle
   function toggleFaq(btn) {
     const item = btn.closest('.faq-item');
     const isOpen = item.classList.contains('open');
@@ -1550,7 +1588,6 @@
     if (!isOpen) item.classList.add('open');
   }
 
-  // Nav scroll effect
   window.addEventListener('scroll', () => {
     const nav = document.querySelector('nav');
     nav.style.padding = window.scrollY > 40 ? '1rem 4rem' : '1.4rem 4rem';
@@ -1619,6 +1656,31 @@
     .then(r => r.ok ? r.json() : [])
     .then(rows => renderSorties(rows))
     .catch(() => {});
+
+  const themeToggle = document.querySelector('.theme-toggle');
+  const themeIcon = document.querySelector('.theme-toggle-icon');
+  const themeLabel = document.querySelector('.theme-toggle-label');
+  function applyTheme(theme) {
+    if (theme === 'dark') {
+      document.body.setAttribute('data-theme', 'dark');
+      themeIcon.textContent = '☀️';
+      themeLabel.textContent = 'Clair';
+    } else {
+      document.body.removeAttribute('data-theme');
+      themeIcon.textContent = '🌙';
+      themeLabel.textContent = 'Sombre';
+    }
+  }
+  const storedTheme = window.localStorage.getItem('vivelaretraite-theme');
+  applyTheme(storedTheme === 'dark' ? 'dark' : 'light');
+  if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+      const current = document.body.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      window.localStorage.setItem('vivelaretraite-theme', next);
+      applyTheme(next);
+    });
+  }
 </script>
 </body>
 </html>
