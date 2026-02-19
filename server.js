@@ -83,6 +83,18 @@ db.serialize(() => {
       FOREIGN KEY(sortie_id) REFERENCES sorties(id)
     )
   `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      sender_id INTEGER NOT NULL,
+      recipient_id INTEGER NOT NULL,
+      body TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(sender_id) REFERENCES users(id),
+      FOREIGN KEY(recipient_id) REFERENCES users(id)
+    )
+  `);
 });
 
 function ensureAdminUser() {
@@ -243,6 +255,11 @@ function isAdminEmail(emailRaw) {
   return String(emailRaw).trim().toLowerCase() === adminEmail;
 }
 
+function getAdminUser(callback) {
+  const adminEmail = (process.env.ADMIN_EMAIL || 'vivelaretraite82@gmail.com').trim().toLowerCase();
+  db.get('SELECT id, email, prenom, nom, telephone FROM users WHERE email = ?', [adminEmail], callback);
+}
+
 function signToken(user) {
   const payload = { uid: user.id, email: user.email, isAdmin: isAdminEmail(user.email) };
   const secret = process.env.JWT_SECRET || 'dev-secret';
@@ -382,6 +399,66 @@ app.get('/api/sorties', (req, res) => {
   });
 });
 
+app.get('/messages', auth, (req, res) => {
+  const currentId = req.user.uid;
+  const isAdmin = isAdminEmail(req.user.email);
+  const otherUserIdParam = parseInt(req.query.user_id || '', 10);
+
+  function sendConversation(otherId) {
+    if (!otherId) return res.json([]);
+    const q = `
+      SELECT m.id, m.sender_id, m.recipient_id, m.body, m.created_at,
+             us.email AS sender_email, us.prenom AS sender_prenom, us.nom AS sender_nom
+      FROM messages m
+      JOIN users us ON us.id = m.sender_id
+      WHERE (m.sender_id = ? AND m.recipient_id = ?)
+         OR (m.sender_id = ? AND m.recipient_id = ?)
+      ORDER BY m.created_at ASC
+    `;
+    db.all(q, [currentId, otherId, otherId, currentId], (err, rows) => {
+      if (err) return res.status(500).json({ error: 'db_error' });
+      res.json(rows);
+    });
+  }
+
+  if (isAdmin) {
+    if (!otherUserIdParam) return res.json([]);
+    return sendConversation(otherUserIdParam);
+  }
+
+  getAdminUser((err, admin) => {
+    if (err || !admin) return res.json([]);
+    sendConversation(admin.id);
+  });
+});
+
+app.post('/messages', auth, (req, res) => {
+  const senderId = req.user.uid;
+  const isAdmin = isAdminEmail(req.user.email);
+  const text = (req.body && req.body.body ? String(req.body.body) : '').trim();
+  const targetUserId = req.body && req.body.user_id ? parseInt(req.body.user_id, 10) : null;
+  if (!text) return res.status(400).json({ error: 'empty' });
+
+  function insertMessage(recipientId) {
+    if (!recipientId) return res.status(400).json({ error: 'invalid_recipient' });
+    const stmt = db.prepare('INSERT INTO messages (sender_id, recipient_id, body) VALUES (?, ?, ?)');
+    stmt.run(senderId, recipientId, text, (err) => {
+      if (err) return res.status(500).json({ error: 'db_error' });
+      res.json({ ok: true });
+    });
+    stmt.finalize();
+  }
+
+  if (isAdmin) {
+    return insertMessage(targetUserId);
+  }
+
+  getAdminUser((err, admin) => {
+    if (err || !admin) return res.status(500).json({ error: 'no_admin' });
+    insertMessage(admin.id);
+  });
+});
+
 app.get('/admin/reservations', auth, requireAdmin, (req, res) => {
   const q = `
     SELECT r.id, r.created_at, u.email, u.prenom, u.nom, u.telephone,
@@ -424,6 +501,30 @@ app.delete('/admin/sorties/:id', auth, requireAdmin, (req, res) => {
   db.run('DELETE FROM sorties WHERE id = ?', [id], function(err) {
     if (err) return res.status(500).json({ error: 'db_error' });
     res.json({ deleted: this.changes > 0 });
+  });
+});
+
+app.get('/admin/messages/threads', auth, requireAdmin, (req, res) => {
+  const adminId = req.user.uid;
+  const q = `
+    SELECT
+      CASE
+        WHEN m.sender_id = ? THEN m.recipient_id
+        ELSE m.sender_id
+      END AS other_id,
+      u.email,
+      u.prenom,
+      u.nom,
+      MAX(m.created_at) AS last_created
+    FROM messages m
+    JOIN users u ON u.id = CASE WHEN m.sender_id = ? THEN m.recipient_id ELSE m.sender_id END
+    WHERE m.sender_id = ? OR m.recipient_id = ?
+    GROUP BY other_id
+    ORDER BY last_created DESC
+  `;
+  db.all(q, [adminId, adminId, adminId, adminId], (err, rows) => {
+    if (err) return res.status(500).json({ error: 'db_error' });
+    res.json(rows);
   });
 });
 

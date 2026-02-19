@@ -1187,6 +1187,73 @@
     background: rgba(179,38,30,0.1);
   }
 
+  .messages-list {
+    max-height: 260px;
+    overflow-y: auto;
+    padding-right: .5rem;
+    margin-bottom: 1rem;
+  }
+  .message-item {
+    margin-bottom: .6rem;
+    display: flex;
+  }
+  .message-item.me {
+    justify-content: flex-end;
+  }
+  .message-bubble {
+    max-width: 80%;
+    padding: .45rem .7rem;
+    border-radius: 14px;
+    font-size: .86rem;
+    line-height: 1.4;
+  }
+  .message-item.me .message-bubble {
+    background: var(--gold);
+    color: #111;
+  }
+  .message-item.them .message-bubble {
+    background: rgba(255,255,255,0.08);
+    color: var(--text);
+  }
+  .message-meta {
+    font-size: .72rem;
+    color: var(--text-light);
+    margin-top: .15rem;
+  }
+
+  .admin-messages-layout {
+    display: grid;
+    grid-template-columns: 1.1fr 2fr;
+    gap: 1.5rem;
+  }
+  .admin-threads {
+    border-right: 1px solid var(--border);
+    max-height: 320px;
+    overflow-y: auto;
+    padding-right: .75rem;
+  }
+  .admin-thread {
+    padding: .45rem .3rem;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-bottom: .3rem;
+  }
+  .admin-thread.active {
+    background: rgba(255,255,255,0.06);
+  }
+  .admin-thread-title {
+    font-size: .86rem;
+  }
+  .admin-thread-meta {
+    font-size: .72rem;
+    color: var(--text-light);
+  }
+  .admin-messages-list {
+    max-height: 260px;
+    overflow-y: auto;
+    margin-bottom: .6rem;
+  }
+
   /* ── FOOTER ── */
   footer {
     background: #1E2820;
@@ -1305,6 +1372,7 @@
       <li><a href="#temoignages">Témoignages</a></li>
       <li><a href="#faq">FAQ</a></li>
       <li><a href="#espace-membre">Espace membre</a></li>
+      <li><a href="#messagerie">Messagerie</a></li>
       <li><a href="#contact" class="nav-cta">Contact</a></li>
       <li id="nav-admin-item" style="display:none;"><a href="#admin-panel">Admin</a></li>
     </ul>
@@ -1372,6 +1440,27 @@
   </div>
 </section>
 
+<section id="messagerie">
+  <div class="section-tag">Messagerie</div>
+  <h2 class="section-title">Échanger avec <em>Alexandra</em></h2>
+  <div class="form-card messaging-card">
+    <div id="messaging-guest" class="section-sub">Connectez-vous à votre espace membre pour envoyer et lire vos messages.</div>
+    <div id="messaging-thread" style="display:none;">
+      <div id="messages-list" class="messages-list"></div>
+      <form id="message-form">
+        <div class="form-group full">
+          <label class="form-label" for="message-text"><span>*</span> Votre message</label>
+          <textarea class="form-textarea" id="message-text" name="body" required placeholder="Écrivez à Alexandra comme si vous envoyiez un SMS…"></textarea>
+        </div>
+        <div class="form-row-bottom">
+          <small>Alexandra vous répondra directement depuis son espace administrateur.</small>
+          <button type="submit" class="btn-primary">Envoyer le message</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
 <section id="admin-panel" style="display:none;">
   <div class="section-tag">Espace administrateur</div>
   <h2 class="section-title">Gestion des réservations et des sorties</h2>
@@ -1420,6 +1509,26 @@
         </div>
       </form>
       <div id="admin-sorties-note" class="member-status"></div>
+    </div>
+    <div class="admin-box">
+      <h3>Messagerie membres</h3>
+      <div class="admin-messages-layout">
+        <div class="admin-threads" id="admin-threads"></div>
+        <div>
+          <div class="section-sub" id="admin-thread-header">Sélectionnez un membre pour voir la conversation.</div>
+          <div id="admin-messages-list" class="admin-messages-list"></div>
+          <form id="admin-message-form">
+            <div class="form-group full">
+              <label class="form-label" for="admin-message-text"><span>*</span> Réponse à envoyer</label>
+              <textarea class="form-textarea" id="admin-message-text" name="body" required></textarea>
+            </div>
+            <div class="form-row-bottom">
+              <small>Vos réponses sont visibles dans la messagerie du membre.</small>
+              <button type="submit" class="btn-primary">Envoyer</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -1934,6 +2043,7 @@
 
 <script>
   const API_BASE = 'https://backend-uhg3.onrender.com';
+  const ADMIN_EMAIL = 'vivelaretraite82@gmail.com';
   let authToken = window.localStorage.getItem('vivelaretraite-token') || '';
   let currentUser = null;
 
@@ -2005,6 +2115,90 @@
         </div>
       `;
     }).join('');
+  }
+
+  function updateMessagingVisibility() {
+    const guest = document.getElementById('messaging-guest');
+    const thread = document.getElementById('messaging-thread');
+    if (!guest || !thread) return;
+    if (!authToken) {
+      guest.style.display = 'block';
+      guest.textContent = 'Connectez-vous à votre espace membre pour envoyer et lire vos messages.';
+      thread.style.display = 'none';
+      return;
+    }
+    const email = currentUser && currentUser.email ? String(currentUser.email).trim().toLowerCase() : '';
+    if (email === ADMIN_EMAIL) {
+      guest.style.display = 'block';
+      guest.textContent = 'Depuis ce compte administrateur, utilisez le panneau Admin pour voir tous les messages des membres.';
+      thread.style.display = 'none';
+    } else {
+      guest.style.display = 'none';
+      thread.style.display = 'block';
+    }
+  }
+
+  function renderMessages(rows) {
+    const list = document.getElementById('messages-list');
+    if (!list) return;
+    if (!Array.isArray(rows) || rows.length === 0) {
+      list.innerHTML = '<div class="section-sub">Aucun message pour le moment. Écrivez à Alexandra pour commencer la conversation.</div>';
+      return;
+    }
+    const myId = currentUser && currentUser.id;
+    list.innerHTML = rows.map(m => {
+      const mine = myId && m.sender_id === myId;
+      const cls = mine ? 'me' : 'them';
+      const body = m.body ? String(m.body) : '';
+      const dateStr = m.created_at ? String(m.created_at).replace('T', ' ').slice(0, 16) : '';
+      return `
+        <div class="message-item ${cls}">
+          <div>
+            <div class="message-bubble">${body}</div>
+            <div class="message-meta">${dateStr}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    list.scrollTop = list.scrollHeight;
+  }
+
+  function loadMessages() {
+    if (!authToken || (currentUser && String(currentUser.email || '').trim().toLowerCase() === ADMIN_EMAIL)) return;
+    fetch(API_BASE + '/messages', {
+      headers: { Authorization: 'Bearer ' + authToken }
+    })
+      .then(r => r.ok ? r.json() : [])
+      .then(rows => renderMessages(rows))
+      .catch(() => {});
+  }
+
+  const messageForm = document.getElementById('message-form');
+  const messageText = document.getElementById('message-text');
+  if (messageForm) {
+    messageForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!authToken || (currentUser && String(currentUser.email || '').trim().toLowerCase() === ADMIN_EMAIL)) {
+        setMemberStatus('Connectez-vous avec un compte membre pour envoyer un message.');
+        return;
+      }
+      const body = messageText ? String(messageText.value || '').trim() : '';
+      if (!body) return;
+      fetch(API_BASE + '/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + authToken
+        },
+        body: JSON.stringify({ body })
+      })
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(() => {
+          if (messageText) messageText.value = '';
+          loadMessages();
+        })
+        .catch(() => {});
+    });
   }
 
   function loadReservations() {
@@ -2149,6 +2343,12 @@
 
   const adminSortieForm = document.getElementById('admin-sortie-form');
   const adminSortiesNote = document.getElementById('admin-sorties-note');
+  const adminThreadsWrap = document.getElementById('admin-threads');
+  const adminMessagesList = document.getElementById('admin-messages-list');
+  const adminMessageForm = document.getElementById('admin-message-form');
+  const adminMessageText = document.getElementById('admin-message-text');
+  const adminThreadHeader = document.getElementById('admin-thread-header');
+  let adminActiveUserId = null;
   if (adminSortieForm) {
     adminSortieForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -2216,6 +2416,108 @@
         }).join('');
       })
       .catch(() => {});
+  }
+
+  function renderAdminThreads(rows) {
+    if (!adminThreadsWrap) return;
+    if (!Array.isArray(rows) || rows.length === 0) {
+      adminThreadsWrap.innerHTML = '<div class="section-sub">Aucune conversation pour le moment.</div>';
+      return;
+    }
+    adminThreadsWrap.innerHTML = rows.map(t => {
+      const id = t.other_id;
+      const name = [t.prenom, t.nom].filter(Boolean).join(' ') || t.email || ('Membre #' + id);
+      const last = t.last_created ? String(t.last_created).replace('T', ' ').slice(0, 16) : '';
+      const active = adminActiveUserId === id ? 'active' : '';
+      return `
+        <div class="admin-thread ${active}" data-id="${id}">
+          <div class="admin-thread-title">${name}</div>
+          <div class="admin-thread-meta">${last}</div>
+        </div>
+      `;
+    }).join('');
+    adminThreadsWrap.querySelectorAll('.admin-thread').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = parseInt(el.getAttribute('data-id') || '', 10);
+        if (!id || !authToken) return;
+        adminActiveUserId = id;
+        renderAdminThreads(rows);
+        if (adminThreadHeader) {
+          const t = rows.find(r => r.other_id === id);
+          const name = t ? ([t.prenom, t.nom].filter(Boolean).join(' ') || t.email || ('Membre #' + id)) : ('Membre #' + id);
+          adminThreadHeader.textContent = 'Conversation avec ' + name;
+        }
+        loadAdminMessages();
+      });
+    });
+  }
+
+  function renderAdminMessages(rows) {
+    if (!adminMessagesList) return;
+    if (!Array.isArray(rows) || rows.length === 0) {
+      adminMessagesList.innerHTML = '<div class="section-sub">Aucun message encore échangé.</div>';
+      return;
+    }
+    const myId = currentUser && currentUser.id;
+    adminMessagesList.innerHTML = rows.map(m => {
+      const mine = myId && m.sender_id === myId;
+      const cls = mine ? 'me' : 'them';
+      const body = m.body ? String(m.body) : '';
+      const dateStr = m.created_at ? String(m.created_at).replace('T', ' ').slice(0, 16) : '';
+      return `
+        <div class="message-item ${cls}">
+          <div>
+            <div class="message-bubble">${body}</div>
+            <div class="message-meta">${dateStr}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    adminMessagesList.scrollTop = adminMessagesList.scrollHeight;
+  }
+
+  function loadAdminThreads() {
+    if (!authToken || !(currentUser && String(currentUser.email || '').trim().toLowerCase() === ADMIN_EMAIL)) return;
+    fetch(API_BASE + '/admin/messages/threads', {
+      headers: { Authorization: 'Bearer ' + authToken }
+    })
+      .then(r => r.ok ? r.json() : [])
+      .then(rows => renderAdminThreads(rows))
+      .catch(() => {});
+  }
+
+  function loadAdminMessages() {
+    if (!authToken || !adminActiveUserId) return;
+    fetch(API_BASE + '/messages?user_id=' + encodeURIComponent(adminActiveUserId), {
+      headers: { Authorization: 'Bearer ' + authToken }
+    })
+      .then(r => r.ok ? r.json() : [])
+      .then(rows => renderAdminMessages(rows))
+      .catch(() => {});
+  }
+
+  if (adminMessageForm) {
+    adminMessageForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!authToken || !adminActiveUserId) return;
+      const body = adminMessageText ? String(adminMessageText.value || '').trim() : '';
+      if (!body) return;
+      fetch(API_BASE + '/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + authToken
+        },
+        body: JSON.stringify({ body, user_id: adminActiveUserId })
+      })
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(() => {
+          if (adminMessageText) adminMessageText.value = '';
+          loadAdminMessages();
+          loadAdminThreads();
+        })
+        .catch(() => {});
+    });
   }
 
   const inscriptionModal = document.getElementById('inscription-modal');
@@ -2340,14 +2642,16 @@
     const openInscr = document.getElementById('open-inscription');
     if (openInscr) openInscr.style.display = hasToken ? 'none' : 'inline-block';
     if (navLogoutBtn) navLogoutBtn.style.display = hasToken ? 'inline-block' : 'none';
-    const isAdmin = currentUser && currentUser.isAdmin;
+    const isAdmin = !!(currentUser && String(currentUser.email || '').trim().toLowerCase() === ADMIN_EMAIL);
     if (navAdminItem) navAdminItem.style.display = isAdmin ? 'inline-block' : 'none';
     if (adminPanel) adminPanel.style.display = isAdmin ? 'block' : 'none';
+    updateMessagingVisibility();
   }
   if (navAdminItem) {
     navAdminItem.addEventListener('click', () => {
-      if (currentUser && currentUser.isAdmin) {
+      if (currentUser && String(currentUser.email || '').trim().toLowerCase() === ADMIN_EMAIL) {
         loadAdminReservations();
+        loadAdminThreads();
       }
     });
   }
@@ -2406,6 +2710,7 @@
             setMemberStatus('Connecté(e) en tant que ' + userEmail + '.');
             loadReservations();
             updateNavAuth();
+            loadMessages();
             closeLogin();
           } else {
             const code = data && data.error;
@@ -2458,6 +2763,7 @@
             setMemberStatus('Connecté(e) en tant que ' + userEmail + '.');
             loadReservations();
             if (typeof updateNavAuth === 'function') updateNavAuth();
+            loadMessages();
           } else {
             const code = data && data.error;
             let msg = 'Impossible de vous connecter.';
@@ -2482,6 +2788,7 @@
           setMemberStatus('Connecté(e) en tant que ' + user.email + '.');
           loadReservations();
           if (typeof updateNavAuth === 'function') updateNavAuth();
+          loadMessages();
         } else {
           authToken = '';
           window.localStorage.removeItem('vivelaretraite-token');
