@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vive la Retraite — Sorties & Activités pour Seniors</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --sage: #7A9E7E;
+    --sage-light: #B8D4BB;
+    --sage-dark: #4A6E4E;
+    --cream: #FAF7F2;
+    --warm-white: #F5F0E8;
+    --text: #2C2C2C;
+    --text-light: #6B6B6B;
+    --gold: #C9A96E;
+    --gold-light: #E8D5B0;
+    --border: #E0D8CC;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    background: var(--cream);
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.4rem 4rem;
+    background: rgba(250,247,242,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    transition: padding .3s;
+  }
+
+  .nav-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.6rem;
+    font-weight: 400;
+    color: var(--sage-dark);
+    letter-spacing: .04em;
+  }
+
+  .nav-logo span { color: var(--gold); font-style: italic; }
+
+  .nav-links {
+    display: flex;
+    gap: 2.4rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    text-decoration: none;
+    color: var(--text-light);
+    font-size: .85rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    transition: color .25s;
+    position: relative;
+  }
+
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: -3px; left: 0;
+    width: 0; height: 1px;
+    background: var(--gold);
+    transition: width .3s;
+  }
+
+  .nav-links a:hover { color: var(--sage-dark); }
+  .nav-links a:hover::after { width: 100%; }
+
+  .nav-cta {
+    background: var(--sage);
+    color: #fff !important;
+    padding: .55rem 1.4rem;
+    border-radius: 2px;
+    transition: background .25s !important;
+  }
+  .nav-cta:hover { background: var(--sage-dark) !important; }
+  .nav-cta::after { display: none !important; }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    padding: 0 4rem;
+    gap: 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -10%; right: -5%;
+    width: 55vw; height: 90vh;
+    background: radial-gradient(ellipse at 60% 40%, var(--sage-light) 0%, var(--warm-white) 60%, transparent 100%);
+    z-index: 0;
+    border-radius: 40% 60% 60% 40% / 50% 40% 60% 50%;
+    opacity: .55;
+  }
+
+  .hero-content { position: relative; z-index: 1; }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .72rem;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--sage-dark);
+    margin-bottom: 1.8rem;
+    opacity: 0;
+    animation: fadeUp .8s .2s forwards;
+  }
+
+  .hero-tag::before {
+    content: '';
+    width: 28px; height: 1px;
+    background: var(--gold);
+  }
+
+  .hero h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.8rem, 4.5vw, 4.2rem);
+    font-weight: 300;
+    line-height: 1.15;
+    color: var(--text);
+    margin-bottom: 1.6rem;
+    opacity: 0;
+    animation: fadeUp .9s .35s forwards;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--sage-dark);
+  }
+
+  .hero-desc {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: var(--text-light);
+    max-width: 420px;
+    margin-bottom: 2.8rem;
+    opacity: 0;
+    animation: fadeUp .9s .5s forwards;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1.2rem;
+    align-items: center;
+    opacity: 0;
+    animation: fadeUp .9s .65s forwards;
+  }
+
+  .btn-primary {
+    display: inline-block;
+    background: var(--sage-dark);
+    color: #fff;
+    padding: .85rem 2.2rem;
+    text-decoration: none;
+    font-size: .82rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    border-radius: 2px;
+    transition: background .25s, transform .2s;
+  }
+  .btn-primary:hover { background: var(--sage); transform: translateY(-2px); }
+
+  .btn-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    color: var(--text-light);
+    text-decoration: none;
+    font-size: .82rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    transition: color .25s;
+  }
+  .btn-outline .arrow {
+    width: 32px; height: 1px;
+    background: var(--gold);
+    position: relative;
+    transition: width .3s;
+  }
+  .btn-outline .arrow::after {
+    content: '';
+    position: absolute;
+    right: -1px; top: -3px;
+    width: 7px; height: 7px;
+    border-right: 1px solid var(--gold);
+    border-top: 1px solid var(--gold);
+    transform: rotate(45deg);
+  }
+  .btn-outline:hover { color: var(--sage-dark); }
+  .btn-outline:hover .arrow { width: 45px; }
+
+  .hero-visual {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    animation: fadeIn 1.2s .5s forwards;
+  }
+
+  .hero-img-wrap {
+    position: relative;
+    width: 460px;
+    height: 520px;
+  }
+
+  .hero-img-wrap .card-img {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--sage-light) 0%, var(--sage) 60%, var(--sage-dark) 100%);
+    border-radius: 4px 80px 4px 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: 20px 30px 60px rgba(74,110,78,.2);
+  }
+
+  .hero-svg-scene {
+    width: 80%;
+    opacity: .9;
+  }
+
+  .hero-badge {
+    position: absolute;
+    bottom: -20px; left: -30px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1rem 1.4rem;
+    box-shadow: 0 10px 40px rgba(0,0,0,.08);
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+  }
+
+  .badge-icon {
+    width: 40px; height: 40px;
+    background: var(--gold-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+  }
+
+  .badge-text strong {
+    display: block;
+    font-size: .95rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .badge-text span {
+    font-size: .75rem;
+    color: var(--text-light);
+    letter-spacing: .05em;
+  }
+
+  /* ── STATS ── */
+  .stats {
+    display: flex;
+    gap: 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: var(--warm-white);
+    overflow: hidden;
+  }
+
+  .stat-item {
+    flex: 1;
+    padding: 2.5rem 3rem;
+    text-align: center;
+    border-right: 1px solid var(--border);
+    transition: background .3s;
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-item:hover { background: var(--cream); }
+
+  .stat-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.8rem;
+    font-weight: 300;
+    color: var(--sage-dark);
+    line-height: 1;
+    margin-bottom: .3rem;
+  }
+
+  .stat-label {
+    font-size: .75rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--text-light);
+  }
+
+  /* ── SECTIONS COMMUNES ── */
+  section { padding: 7rem 4rem; }
+
+  .section-tag {
+    font-size: .72rem;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+  }
+
+  .section-tag::after {
+    content: '';
+    flex: 1;
+    max-width: 40px;
+    height: 1px;
+    background: var(--gold-light);
+  }
+
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 3vw, 2.8rem);
+    font-weight: 300;
+    line-height: 1.25;
+    color: var(--text);
+    margin-bottom: 1rem;
+  }
+
+  .section-title em { font-style: italic; color: var(--sage-dark); }
+
+  .section-sub {
+    font-size: .95rem;
+    line-height: 1.8;
+    color: var(--text-light);
+    max-width: 500px;
+  }
+
+  /* ── ACTIVITÉS ── */
+  #activites { background: var(--cream); }
+
+  .activities-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 4rem;
+    gap: 2rem;
+  }
+
+  .activities-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+
+  .activity-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: transform .3s, box-shadow .3s;
+    cursor: pointer;
+  }
+
+  .activity-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 50px rgba(0,0,0,.08);
+  }
+
+  .activity-card:first-child {
+    grid-row: span 2;
+  }
+
+  .card-thumb {
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-thumb .thumb-bg {
+    position: absolute;
+    inset: 0;
+    opacity: .15;
+    background: currentColor;
+  }
+
+  .activity-card:first-child .card-thumb {
+    height: 280px;
+  }
+
+  .card-body {
+    padding: 1.6rem;
+  }
+
+  .card-cat {
+    font-size: .68rem;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: var(--sage);
+    margin-bottom: .5rem;
+  }
+
+  .card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: .5rem;
+    line-height: 1.3;
+  }
+
+  .card-desc {
+    font-size: .85rem;
+    color: var(--text-light);
+    line-height: 1.7;
+    margin-bottom: 1.2rem;
+  }
+
+  .card-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: .75rem;
+    color: var(--text-light);
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .card-meta span { display: flex; align-items: center; gap: .3rem; }
+
+  /* ── COMMENT ÇA MARCHE ── */
+  #comment { background: var(--warm-white); }
+
+  .steps-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6rem;
+    align-items: center;
+  }
+
+  .steps-list { margin-top: 3rem; }
+
+  .step {
+    display: flex;
+    gap: 1.5rem;
+    padding: 1.8rem 0;
+    border-bottom: 1px solid var(--border);
+    transition: background .2s;
+  }
+  .step:first-child { padding-top: 0; }
+  .step:last-child { border-bottom: none; }
+
+  .step-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.2rem;
+    font-weight: 300;
+    color: var(--border);
+    min-width: 3rem;
+    line-height: 1;
+    padding-top: .2rem;
+    transition: color .3s;
+  }
+
+  .step:hover .step-num { color: var(--gold); }
+
+  .step-content h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: .4rem;
+  }
+
+  .step-content p {
+    font-size: .88rem;
+    color: var(--text-light);
+    line-height: 1.7;
+  }
+
+  .steps-visual {
+    position: relative;
+    height: 480px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .visual-circle {
+    width: 360px;
+    height: 360px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--sage-light) 0%, var(--sage) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 5rem;
+    box-shadow: 0 20px 60px rgba(122,158,126,.3);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .visual-circle::before {
+    content: '';
+    position: absolute;
+    top: -30%; left: -30%;
+    width: 60%; height: 60%;
+    background: rgba(255,255,255,.2);
+    border-radius: 50%;
+  }
+
+  .floating-card {
+    position: absolute;
+    background: #fff;
+    border: 1px solid var(--border);
+    padding: 1rem 1.2rem;
+    border-radius: 4px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.07);
+    font-size: .8rem;
+    white-space: nowrap;
+  }
+
+  .floating-card.fc1 { top: 20px; right: -20px; }
+  .floating-card.fc2 { bottom: 40px; left: -30px; }
+
+  .fc-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--sage);
+    margin-right: .4rem;
+  }
+
+  /* ── TEMOIGNAGES ── */
+  #temoignages { background: var(--cream); }
+
+  .testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-top: 4rem;
+  }
+
+  .testimonial-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    padding: 2.2rem;
+    border-radius: 4px;
+    position: relative;
+    transition: box-shadow .3s;
+  }
+
+  .testimonial-card:hover {
+    box-shadow: 0 12px 40px rgba(0,0,0,.07);
+  }
+
+  .testimonial-card::before {
+    content: '"';
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 5rem;
+    color: var(--sage-light);
+    line-height: 1;
+    position: absolute;
+    top: 1rem; right: 1.5rem;
+    opacity: .6;
+  }
+
+  .testimonial-text {
+    font-size: .9rem;
+    line-height: 1.8;
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+    font-style: italic;
+  }
+
+  .testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .author-avatar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    background: var(--warm-white);
+    border: 1px solid var(--border);
+  }
+
+  .author-name {
+    font-size: .88rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .author-info {
+    font-size: .75rem;
+    color: var(--text-light);
+  }
+
+  .stars {
+    color: var(--gold);
+    font-size: .75rem;
+    margin-bottom: .3rem;
+  }
+
+  /* ── FAQ ── */
+  #faq { background: var(--warm-white); }
+
+  .faq-layout {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 6rem;
+    align-items: start;
+    margin-top: 3rem;
+  }
+
+  .faq-intro p {
+    font-size: .9rem;
+    color: var(--text-light);
+    line-height: 1.8;
+    margin-top: 1.2rem;
+    margin-bottom: 2rem;
+  }
+
+  .faq-contact {
+    display: inline-flex;
+    align-items: center;
+    gap: .7rem;
+    font-size: .82rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--sage-dark);
+    text-decoration: none;
+    border: 1px solid var(--sage-dark);
+    padding: .7rem 1.4rem;
+    border-radius: 2px;
+    transition: background .25s, color .25s;
+  }
+
+  .faq-contact:hover {
+    background: var(--sage-dark);
+    color: #fff;
+  }
+
+  .faq-list { display: flex; flex-direction: column; gap: 0; }
+
+  .faq-item {
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .faq-item:first-child {
+    border-top: 1px solid var(--border);
+  }
+
+  .faq-question {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 1.5rem 0;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: var(--text);
+    transition: color .25s;
+  }
+
+  .faq-question:hover { color: var(--sage-dark); }
+
+  .faq-icon {
+    width: 24px; height: 24px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--text-light);
+    font-size: .9rem;
+    transition: background .25s, color .25s, transform .3s;
+  }
+
+  .faq-item.open .faq-icon {
+    background: var(--sage-dark);
+    color: #fff;
+    border-color: var(--sage-dark);
+    transform: rotate(45deg);
+  }
+
+  .faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height .4s cubic-bezier(.4,0,.2,1);
+  }
+
+  .faq-item.open .faq-answer { max-height: 300px; }
+
+  .faq-answer-inner {
+    padding-bottom: 1.5rem;
+    font-size: .9rem;
+    color: var(--text-light);
+    line-height: 1.8;
+  }
+
+  /* ── CTA ── */
+  .cta-section {
+    background: var(--sage-dark);
+    padding: 7rem 4rem;
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 4rem;
+    align-items: start;
+  }
+
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -20%;
+    width: 60vw; height: 200%;
+    background: radial-gradient(ellipse, rgba(201,169,110,.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .cta-section .section-tag { justify-content: flex-start; color: var(--sage-light); }
+  .cta-section .section-tag::after { background: var(--sage); }
+
+  .cta-section .section-title {
+    color: #fff;
+    font-size: clamp(2.2rem, 3.5vw, 3rem);
+    margin-bottom: 1.2rem;
+  }
+
+  .cta-section .section-title em { color: var(--gold-light); }
+
+  .cta-section p {
+    font-size: .95rem;
+    color: rgba(255,255,255,.65);
+    max-width: 480px;
+    margin-bottom: 2.2rem;
+    line-height: 1.8;
+  }
+
+  .cta-highlights {
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    font-size: .88rem;
+    color: rgba(255,255,255,.75);
+  }
+
+  .cta-highlights span {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+  }
+
+  .cta-highlights span strong {
+    font-weight: 500;
+    color: #fff;
+  }
+
+  .cta-section .btn-primary {
+    background: var(--gold);
+    color: #fff;
+    font-size: .88rem;
+    padding: 1rem 2.6rem;
+  }
+  .cta-section .btn-primary:hover { background: var(--gold-light); color: var(--text); }
+
+  .feedback-banner {
+    position: fixed;
+    top: 76px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    color: var(--sage-dark);
+    padding: .8rem 1.4rem;
+    border-radius: 999px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.14);
+    font-size: .85rem;
+    z-index: 90;
+    display: none;
+    white-space: nowrap;
+  }
+
+  .feedback-banner.visible {
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+  }
+
+  .form-card {
+    background: #fff;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    padding: 2rem;
+    box-shadow: 0 14px 40px rgba(0,0,0,.18);
+  }
+
+  .form-card h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: .4rem;
+  }
+
+  .form-card p {
+    font-size: .86rem;
+    color: var(--text-light);
+    margin-bottom: 1.6rem;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem 1.4rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    font-size: .85rem;
+  }
+
+  .form-group.full {
+    grid-column: 1 / -1;
+  }
+
+  .form-label {
+    color: var(--text);
+    font-weight: 400;
+  }
+
+  .form-label span {
+    color: var(--gold);
+  }
+
+  .form-input,
+  .form-select,
+  .form-textarea {
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    padding: .65rem .8rem;
+    font-family: inherit;
+    font-size: .86rem;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+
+  .form-textarea {
+    resize: vertical;
+    min-height: 90px;
+  }
+
+  .form-input:focus,
+  .form-select:focus,
+  .form-textarea:focus {
+    border-color: var(--sage-dark);
+    box-shadow: 0 0 0 1px rgba(122,158,126,.25);
+  }
+
+  .form-note {
+    font-size: .75rem;
+    color: var(--text-light);
+    margin-top: .6rem;
+  }
+
+  .form-row-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.4rem;
+  }
+
+  .form-row-bottom .btn-primary {
+    border: none;
+    cursor: pointer;
+  }
+
+  .form-row-bottom small {
+    font-size: .75rem;
+    color: var(--text-light);
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    background: #1E2820;
+    color: rgba(255,255,255,.5);
+    padding: 4rem;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 3rem;
+  }
+
+  .footer-brand .nav-logo {
+    color: rgba(255,255,255,.9);
+    display: block;
+    margin-bottom: 1rem;
+    font-size: 1.4rem;
+  }
+
+  .footer-brand p {
+    font-size: .82rem;
+    line-height: 1.8;
+    max-width: 240px;
+  }
+
+  .footer-col h4 {
+    font-size: .72rem;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.8);
+    margin-bottom: 1.2rem;
+  }
+
+  .footer-col ul { list-style: none; }
+  .footer-col ul li { margin-bottom: .6rem; }
+  .footer-col ul a {
+    text-decoration: none;
+    color: rgba(255,255,255,.45);
+    font-size: .83rem;
+    transition: color .25s;
+  }
+  .footer-col ul a:hover { color: var(--sage-light); }
+
+  .footer-bottom {
+    background: #161D18;
+    padding: 1.2rem 4rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: .75rem;
+    color: rgba(255,255,255,.3);
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity .7s, transform .7s;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 1024px) {
+    nav { padding: 1.2rem 2rem; }
+    .hero { padding: 8rem 2rem 4rem; grid-template-columns: 1fr; text-align: center; }
+    .hero::before { display: none; }
+    .hero-visual { display: none; }
+    .hero-actions { justify-content: center; }
+    section { padding: 5rem 2rem; }
+    .activities-header { flex-direction: column; align-items: flex-start; }
+    .activities-grid { grid-template-columns: 1fr 1fr; }
+    .activity-card:first-child { grid-row: span 1; }
+    .steps-wrap, .faq-layout { grid-template-columns: 1fr; gap: 3rem; }
+    .steps-visual { display: none; }
+    .testimonials-grid { grid-template-columns: 1fr; }
+    .cta-section {
+      grid-template-columns: 1fr;
+      padding: 5rem 2rem;
+    }
+    footer { grid-template-columns: 1fr 1fr; }
+    footer { grid-template-columns: 1fr 1fr; }
+    .nav-links { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Vive la Retraite</div>
+  <ul class="nav-links">
+    <li><a href="#activites">Activités</a></li>
+    <li><a href="#sorties">Sorties</a></li>
+    <li><a href="#comment">Comment ça marche</a></li>
+    <li><a href="#temoignages">Témoignages</a></li>
+    <li><a href="#faq">FAQ</a></li>
+    <li><a href="#inscription">Inscription</a></li>
+    <li><a href="#contact" class="nav-cta">Contact</a></li>
+  </ul>
+</nav>
+
+<div id="feedback-banner" class="feedback-banner"></div>
+
+<!-- HERO -->
+<section class="hero" id="accueil">
+  <div class="hero-content">
+    <div class="hero-tag">Vive la Retraite avec Alexandra</div>
+    <h1>Des sorties<br>qui donnent envie<br><em>de sortir de chez soi</em></h1>
+    <p class="hero-desc">Alexandra, maman de trois enfants et ancienne éleveuse animalière, accompagne avec douceur et bienveillance les seniors dans des activités choisies pour leur confort, leur sécurité et leur plaisir.</p>
+    <div class="hero-actions">
+      <a href="#activites" class="btn-primary">Découvrir les sorties</a>
+      <a href="#comment" class="btn-outline"><span class="arrow"></span>Comment ça marche</a>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="hero-img-wrap">
+      <div class="card-img">
+        <svg class="hero-svg-scene" viewBox="0 0 300 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- People silhouettes walking in nature -->
+          <circle cx="150" cy="60" r="50" fill="rgba(255,255,255,.12)"/>
+          <ellipse cx="150" cy="200" rx="100" ry="20" fill="rgba(255,255,255,.08)"/>
+          <!-- Person 1 -->
+          <circle cx="120" cy="130" r="16" fill="rgba(255,255,255,.7)"/>
+          <rect x="112" y="148" width="16" height="40" rx="8" fill="rgba(255,255,255,.7)"/>
+          <!-- Person 2 -->
+          <circle cx="160" cy="125" r="14" fill="rgba(255,255,255,.5)"/>
+          <rect x="153" y="141" width="14" height="36" rx="7" fill="rgba(255,255,255,.5)"/>
+          <!-- Tree left -->
+          <rect x="60" y="170" width="8" height="40" rx="4" fill="rgba(255,255,255,.3)"/>
+          <ellipse cx="64" cy="155" rx="20" ry="28" fill="rgba(255,255,255,.2)"/>
+          <!-- Tree right -->
+          <rect x="220" y="175" width="8" height="35" rx="4" fill="rgba(255,255,255,.3)"/>
+          <ellipse cx="224" cy="162" rx="16" ry="22" fill="rgba(255,255,255,.2)"/>
+          <!-- Sun -->
+          <circle cx="230" cy="55" r="22" fill="rgba(255,255,255,.25)"/>
+          <circle cx="230" cy="55" r="14" fill="rgba(255,255,255,.35)"/>
+          <!-- Path -->
+          <path d="M 80 220 Q 150 200 220 220" stroke="rgba(255,255,255,.25)" stroke-width="3" fill="none"/>
+          <!-- Stars/flowers -->
+          <circle cx="90" cy="90" r="3" fill="rgba(255,255,255,.4)"/>
+          <circle cx="200" cy="100" r="2" fill="rgba(255,255,255,.3)"/>
+          <circle cx="175" cy="75" r="4" fill="rgba(255,255,255,.35)"/>
+        </svg>
+      </div>
+      <div class="hero-badge">
+        <div class="badge-icon">🌟</div>
+        <div class="badge-text">
+          <strong>+121 membres</strong>
+          <span>actifs cette année</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat-item reveal">
+    <div class="stat-num">248</div>
+    <div class="stat-label">Sorties organisées</div>
+  </div>
+  <div class="stat-item reveal">
+    <div class="stat-num">121</div>
+    <div class="stat-label">Membres heureux</div>
+  </div>
+  <div class="stat-item reveal">
+    <div class="stat-num">45+</div>
+    <div class="stat-label">Types d'activités</div>
+  </div>
+  <div class="stat-item reveal">
+    <div class="stat-num">98%</div>
+    <div class="stat-label">Satisfaction</div>
+  </div>
+</div>
+
+<!-- ACTIVITÉS -->
+<section id="activites">
+  <div class="activities-header reveal">
+    <div>
+      <div class="section-tag">Notre programme</div>
+      <h2 class="section-title">Des activités pensées<br>pour <em>votre bien-être</em></h2>
+    </div>
+    <p class="section-sub">Chaque sortie est soigneusement sélectionnée et encadrée par notre équipe bienveillante, avec un accompagnement personnalisé tout au long de la journée.</p>
+  </div>
+
+  <div class="activities-grid">
+    <div class="activity-card reveal">
+      <div class="card-thumb" style="background: linear-gradient(135deg,#B8D4BB,#7A9E7E);">
+        <div class="thumb-bg"></div>
+        <span style="position:relative;z-index:1;font-size:3.5rem">🌿</span>
+      </div>
+      <div class="card-body">
+        <div class="card-cat">Plein air</div>
+        <h3 class="card-title">Promenades & randonnées douces en nature</h3>
+        <p class="card-desc">Des balades adaptées à votre rythme, dans des cadres naturels exceptionnels. Forêts, parcs, bords de rivière — chaque sortie est une bouffée d'air pur.</p>
+        <div class="card-meta">
+          <span>📅 Hebdomadaire</span>
+          <span>👥 6 à 15 pers.</span>
+          <span>🚌 Transport inclus</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="activity-card reveal">
+      <div class="card-thumb" style="background: linear-gradient(135deg,#E8D5B0,#C9A96E);">
+        <div class="thumb-bg"></div>
+        <span style="position:relative;z-index:1">🎭</span>
+      </div>
+      <div class="card-body">
+        <div class="card-cat">Culture</div>
+        <h3 class="card-title">Théâtre, opéra & expositions</h3>
+        <p class="card-desc">Accès privilégié aux meilleures salles et musées de la région, avec accompagnement et places réservées.</p>
+        <div class="card-meta">
+          <span>📅 2× / mois</span>
+          <span>👥 4 à 20 pers.</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="activity-card reveal">
+      <div class="card-thumb" style="background: linear-gradient(135deg,#F0E8D4,#C9A96E);">
+        <div class="thumb-bg"></div>
+        <span style="position:relative;z-index:1">🍳</span>
+      </div>
+      <div class="card-body">
+        <div class="card-cat">Gastronomie</div>
+        <h3 class="card-title">Ateliers cuisine & visites de marchés</h3>
+        <p class="card-desc">Découvrez les saveurs locales, apprenez de nouvelles recettes et partagez un repas convivial.</p>
+        <div class="card-meta">
+          <span>📅 Mensuel</span>
+          <span>👥 6 à 12 pers.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="activity-card reveal">
+      <div class="card-thumb" style="background: linear-gradient(135deg,#D4DCE8,#6E7EA9);">
+        <div class="thumb-bg"></div>
+        <span style="position:relative;z-index:1">🎨</span>
+      </div>
+      <div class="card-body">
+        <div class="card-cat">Création</div>
+        <h3 class="card-title">Ateliers peinture & artisanat</h3>
+        <p class="card-desc">Exprimez votre créativité dans une ambiance détendue, encadrés par des artistes passionnés.</p>
+        <div class="card-meta">
+          <span>📅 Hebdomadaire</span>
+          <span>👥 6 pers. max</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SORTIES -->
+<section id="sorties">
+  <div class="activities-header reveal">
+    <div>
+      <div class="section-tag">Annonces</div>
+      <h2 class="section-title">Sorties à <em>venir</em></h2>
+    </div>
+    <p class="section-sub">Créées par Alexandra. Réservez votre place, nous vous rappelons pour confirmer les détails.</p>
+  </div>
+  <div id="sorties-list" class="activities-grid"></div>
+  <div id="sorties-empty" class="section-sub" style="display:none;">Aucune sortie publiée pour le moment.</div>
+  <div style="margin-top:1.2rem;" class="section-sub">Administration: ajouter des sorties sur <a href="https://backend-uhg3.onrender.com/admin" style="color:var(--sage-dark);text-decoration:underline;">l’espace admin</a>.</div>
+  </section>
+
+<!-- COMMENT ÇA MARCHE -->
+<section id="comment">
+  <div class="steps-wrap">
+    <div>
+      <div class="section-tag reveal">Processus</div>
+      <h2 class="section-title reveal">Simple comme<br>un <em>coup de fil</em></h2>
+      <div class="steps-list">
+        <div class="step reveal">
+          <div class="step-num">01</div>
+          <div class="step-content">
+            <h3>Inscription gratuite</h3>
+            <p>Créez votre profil en quelques minutes. Indiquez vos préférences, vos disponibilités et votre niveau de mobilité — tout est pris en compte.</p>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">02</div>
+          <div class="step-content">
+            <h3>Choisissez vos sorties</h3>
+            <p>Consultez le programme mensuel et réservez les activités qui vous correspondent. Nos conseillers sont disponibles pour vous guider par téléphone.</p>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">03</div>
+          <div class="step-content">
+            <h3>Nous nous occupons du reste</h3>
+            <p>Transport, accompagnateur dédié, accessibilité, repas si nécessaire — tout est organisé pour que vous profitiez pleinement.</p>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">04</div>
+          <div class="step-content">
+            <h3>Profitez & partagez</h3>
+            <p>Vivez des moments inoubliables entouré de nouvelles amitiés. Nos membres forment une communauté chaleureuse et solidaire.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="steps-visual">
+      <div class="visual-circle">🌸</div>
+      <div class="floating-card fc1">
+        <span class="fc-dot"></span> Prochaine sortie dans <strong>3 jours</strong>
+      </div>
+      <div class="floating-card fc2">
+        🚌 Transport & accompagnement inclus
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INSCRIPTION -->
+<section id="inscription">
+  <div class="activities-header reveal" style="align-items:flex-start;">
+    <div>
+      <div class="section-tag">Inscription</div>
+      <h2 class="section-title">Rejoindre <em>Vive la Retraite</em></h2>
+      <p class="section-sub">Quelques informations suffisent pour que nous puissions vous proposer des sorties parfaitement adaptées à votre rythme, vos envies et votre mobilité.</p>
+    </div>
+    <div class="section-sub">
+      Alexandra prend le temps d’appeler chaque nouvelle personne pour faire connaissance, répondre aux questions et rassurer les proches. L’inscription est gratuite et sans engagement.
+    </div>
+  </div>
+
+  <div class="form-card reveal">
+    <h3>Formulaire d’inscription</h3>
+    <p>Remplissez ce formulaire pour être rappelé(e) par Alexandra et recevoir le programme des prochaines sorties.</p>
+    <form action="https://backend-uhg3.onrender.com/inscription" method="post">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label" for="prenom"><span>*</span> Prénom</label>
+          <input class="form-input" type="text" id="prenom" name="prenom" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="nom"><span>*</span> Nom</label>
+          <input class="form-input" type="text" id="nom" name="nom" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="email"><span>*</span> Email</label>
+          <input class="form-input" type="email" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="telephone">Téléphone</label>
+          <input class="form-input" type="tel" id="telephone" name="telephone" placeholder="06 67 09 51 43">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="ville">Ville</label>
+          <input class="form-input" type="text" id="ville" name="ville">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="naissance">Année de naissance</label>
+          <input class="form-input" type="number" id="naissance" name="naissance" min="1925" max="2010" placeholder="1947">
+        </div>
+        <div class="form-group full">
+          <label class="form-label" for="preferences">Types de sorties préférées</label>
+          <textarea class="form-textarea" id="preferences" name="preferences" placeholder="Exemples : théâtre, promenade douce, restaurant, jeux de société…"></textarea>
+        </div>
+      </div>
+      <div class="form-row-bottom">
+        <small>Les informations restent confidentielles et ne sont jamais partagées.</small>
+        <button type="submit" class="btn-primary">Valider mon inscription</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- TÉMOIGNAGES -->
+<section id="temoignages">
+  <div style="text-align:center;" class="reveal">
+    <div class="section-tag" style="justify-content:center;">Témoignages</div>
+    <h2 class="section-title">Ils nous font <em>confiance</em></h2>
+  </div>
+  <div class="testimonials-grid">
+    <div class="testimonial-card reveal">
+      <div class="stars">★★★★★</div>
+      <p class="testimonial-text">Grâce à Alexandra, je ne reste plus seule le week-end. Les sorties au théâtre sont magnifiquement organisées et elle est d'une gentillesse rare.</p>
+      <div class="testimonial-author">
+        <div class="author-avatar">👩</div>
+        <div>
+          <div class="author-name">Marguerite D.</div>
+          <div class="author-info">72 ans — Membre depuis 2 ans</div>
+        </div>
+      </div>
+    </div>
+    <div class="testimonial-card reveal">
+      <div class="stars">★★★★★</div>
+      <p class="testimonial-text">Mon mari et moi avons redécouvert la randonnée grâce aux sorties qu'Alexandra organise. Elle pense à tout, même à nos régimes alimentaires lors des pique-niques !</p>
+      <div class="testimonial-author">
+        <div class="author-avatar">👵</div>
+        <div>
+          <div class="author-name">Hélène & Robert B.</div>
+          <div class="author-info">68 et 74 ans — Membres depuis 1 an</div>
+        </div>
+      </div>
+    </div>
+    <div class="testimonial-card reveal">
+      <div class="stars">★★★★★</div>
+      <p class="testimonial-text">À 80 ans, je pensais que les voyages c'était fini pour moi. Alexandra m'a prouvé le contraire. Son service est irréprochable et l'ambiance est toujours festive.</p>
+      <div class="testimonial-author">
+        <div class="author-avatar">👴</div>
+        <div>
+          <div class="author-name">André M.</div>
+          <div class="author-info">80 ans — Membre depuis 3 ans</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="faq-layout">
+    <div class="reveal">
+      <div class="section-tag">Support</div>
+      <h2 class="section-title">Questions <em>fréquentes</em></h2>
+      <p>Vive la Retraite a été créée par Alexandra, maman de trois enfants et ancienne professionnelle de l’élevage animalier. Elle met aujourd’hui sa douceur, son énergie et son sens du contact au service des seniors qui souhaitent continuer à sortir, découvrir et rencontrer du monde.</p>
+      <a href="tel:+33667095143" class="faq-contact">📞 Appeler Alexandra</a>
+    </div>
+
+    <div class="faq-list reveal">
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Comment se déroule la première prise de contact ?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer">
+          <p class="faq-answer-inner">Après votre message ou votre inscription, Alexandra vous rappelle personnellement. Elle prend le temps d’écouter votre histoire, vos envies, vos craintes éventuelles et votre niveau de mobilité. Ensemble, vous choisissez les premières sorties les plus adaptées pour que vous vous sentiez totalement en confiance.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Les activités sont-elles adaptées à tous les niveaux de mobilité ?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer">
+          <p class="faq-answer-inner">Oui. Chaque sortie est pensée pour les seniors. Alexandra adapte les trajets, la durée de marche, les temps de pause et le choix des lieux. Lors de l’inscription, vous pouvez indiquer si vous utilisez une canne, un déambulateur ou un fauteuil roulant afin que tout soit prévu en amont.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Le transport est-il inclus dans le prix des sorties ?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer">
+          <p class="faq-answer-inner">Le transport est prévu pour la plupart des sorties afin de vous simplifier la vie. Lorsque ce n’est pas le cas, Alexandra vous explique clairement les options possibles (co-voiturage, transport adapté, taxi partenaire) pour que rien ne soit laissé au hasard.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Puis-je venir accompagné d'un membre de ma famille ?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer">
+          <p class="faq-answer-inner">Bien sûr. Les proches sont les bienvenus, que ce soit pour rassurer un parent lors des premières sorties ou pour partager un moment privilégié. Alexandra vous indique simplement les conditions et les tarifs accompagnants au moment de la réservation.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Quels sont les tarifs et y a-t-il des abonnements ?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer">
+          <p class="faq-answer-inner">L’inscription est gratuite. Les tarifs des sorties dépendent du type d’activité et des services inclus (transport, repas, entrées, etc.). Alexandra prend le temps de vous expliquer les différentes formules par téléphone afin de trouver ce qui correspond le mieux à votre budget.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Comment annuler ou modifier une réservation ?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer">
+          <p class="faq-answer-inner">La vie réserve parfois des imprévus. En cas de souci de santé ou de changement de planning, il suffit de prévenir Alexandra le plus tôt possible. Ensemble, vous trouverez une solution bienveillante : report de sortie, avoir, ou autre organisation.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Y a-t-il un accompagnateur pour chaque sortie ?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer">
+          <p class="faq-answer-inner">Alexandra accompagne elle-même une grande partie des sorties. Selon la taille du groupe, elle peut être épaulée par d’autres accompagnants de confiance, choisis pour leur patience, leur écoute et leur sens du service.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Le service est-il disponible dans toute la France ?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer">
+          <p class="faq-answer-inner">Vive la Retraite se développe progressivement. Même si toutes les villes ne sont pas encore couvertes, il est toujours utile de laisser vos coordonnées : Alexandra vous contactera pour vous informer des prochaines ouvertures ou des sorties proches de chez vous.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA / CONTACT -->
+<section class="cta-section" id="contact">
+  <div>
+    <div class="section-tag reveal">Contact & accompagnement</div>
+    <h2 class="section-title reveal">Alexandra est là<br>pour vous <em>et vos proches</em></h2>
+    <p class="reveal">Une question, une inquiétude, l’envie de tester une première sortie ? Alexandra prend le temps d’écouter chaque situation pour proposer des sorties rassurantes, adaptées et chaleureuses.</p>
+    <div class="cta-highlights reveal">
+      <span>📞 <strong>06 67 09 51 43</strong></span>
+      <span>✉️ <strong>vivelaretraite82@gmail.com</strong></span>
+      <span>🤝 Premier échange toujours gratuit et sans engagement.</span>
+    </div>
+  </div>
+  <div class="form-card reveal">
+    <h3>Écrire à Alexandra</h3>
+    <p>Expliquez en quelques mots votre besoin ou la situation du senior concerné. Alexandra vous répondra ou vous rappellera au plus vite.</p>
+    <form action="https://backend-uhg3.onrender.com/contact" method="post">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label" for="contact-nom"><span>*</span> Nom et prénom</label>
+          <input class="form-input" type="text" id="contact-nom" name="nom" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="contact-email"><span>*</span> Email</label>
+          <input class="form-input" type="email" id="contact-email" name="email" required>
+        </div>
+        <div class="form-group full">
+          <label class="form-label" for="contact-telephone">Téléphone</label>
+          <input class="form-input" type="tel" id="contact-telephone" name="telephone" placeholder="06 67 09 51 43">
+        </div>
+        <div class="form-group full">
+          <label class="form-label" for="contact-message"><span>*</span> Votre message</label>
+          <textarea class="form-textarea" id="contact-message" name="message" required placeholder="Parlez-nous de vous ou de la personne que vous accompagnez…"></textarea>
+        </div>
+      </div>
+      <div class="form-row-bottom">
+        <small>Vous recevrez une réponse personnalisée directement par Alexandra.</small>
+        <button type="submit" class="btn-primary">Envoyer le message</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">
+    <span class="nav-logo">Vive la Retraite</span>
+    <p>Des sorties chaleureuses, sécurisées et humaines, imaginées par Alexandra pour que chaque senior puisse continuer à vivre de beaux moments hors de chez soi.</p>
+  </div>
+  <div class="footer-col">
+    <h4>Activités</h4>
+    <ul>
+      <li><a href="#">Sorties culturelles</a></li>
+      <li><a href="#">Plein air</a></li>
+      <li><a href="#">Bien-être</a></li>
+      <li><a href="#">Ateliers créatifs</a></li>
+      <li><a href="#">Gastronomie</a></li>
+    </ul>
+  </div>
+  <div class="footer-col">
+    <h4>Informations</h4>
+    <ul>
+      <li><a href="#">Notre équipe</a></li>
+      <li><a href="#">Tarifs</a></li>
+      <li><a href="#">Programme mensuel</a></li>
+      <li><a href="#">Partenaires</a></li>
+      <li><a href="#">Presse</a></li>
+    </ul>
+  </div>
+  <div class="footer-col">
+    <h4>Contact</h4>
+    <ul>
+      <li><a href="tel:+33667095143">06 67 09 51 43</a></li>
+      <li><a href="mailto:vivelaretraite82@gmail.com">vivelaretraite82@gmail.com</a></li>
+      <li><a href="#">Trouver une agence</a></li>
+      <li><a href="#">Espace membre</a></li>
+    </ul>
+  </div>
+</footer>
+<div class="footer-bottom">
+  <span>© 2025 SérénJours — Tous droits réservés</span>
+  <span><a href="#" style="color:inherit;text-decoration:none;margin-right:1.5rem;">Mentions légales</a><a href="#" style="color:inherit;text-decoration:none;">Confidentialité</a></span>
+</div>
+
+<script>
+  // Intersection Observer for reveal animations
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 80);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  reveals.forEach(el => observer.observe(el));
+
+  // FAQ toggle
+  function toggleFaq(btn) {
+    const item = btn.closest('.faq-item');
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+
+  // Nav scroll effect
+  window.addEventListener('scroll', () => {
+    const nav = document.querySelector('nav');
+    nav.style.padding = window.scrollY > 40 ? '1rem 4rem' : '1.4rem 4rem';
+  });
+
+  const feedbackBanner = document.getElementById('feedback-banner');
+  if (feedbackBanner) {
+    const params = new URLSearchParams(window.location.search);
+    let message = '';
+    if (params.get('inscription') === 'ok') {
+      message = 'Merci, votre inscription a bien été enregistrée.';
+    } else if (params.get('contact') === 'ok') {
+      message = 'Merci pour votre message, Alexandra vous répondra rapidement.';
+    }
+    if (message) {
+      feedbackBanner.textContent = message;
+      feedbackBanner.classList.add('visible');
+      setTimeout(() => {
+        feedbackBanner.classList.remove('visible');
+      }, 6000);
+    }
+  }
+
+  function renderSorties(rows) {
+    const list = document.getElementById('sorties-list');
+    const empty = document.getElementById('sorties-empty');
+    if (!Array.isArray(rows) || rows.length === 0) {
+      empty.style.display = 'block';
+      return;
+    }
+    list.innerHTML = rows.map(s => {
+      const safeTitre = s.titre ? String(s.titre) : '';
+      const safeLieu = s.lieu ? String(s.lieu) : 'Sortie';
+      const safeDate = s.date_iso ? String(s.date_iso) : '';
+      const safeDesc = s.description ? String(s.description) : '';
+      return `
+        <div class="activity-card reveal">
+          <div class="card-thumb" style="background: linear-gradient(135deg,#E8D5B0,#C9A96E);">
+            <div class="thumb-bg"></div>
+            <span style="position:relative;z-index:1">📅</span>
+          </div>
+          <div class="card-body">
+            <div class="card-cat">${safeLieu}</div>
+            <h3 class="card-title">${safeTitre}</h3>
+            <p class="card-desc">${safeDesc}</p>
+            <div class="card-meta">
+              <span>${safeDate}</span>
+            </div>
+            <div style="margin-top:1rem;">
+              <a href="#inscription" class="btn-primary sortie-reserver" data-titre="${encodeURIComponent(safeTitre)}">Réserver</a>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    list.querySelectorAll('.sortie-reserver').forEach(a => {
+      a.addEventListener('click', (e) => {
+        const titre = decodeURIComponent(e.currentTarget.getAttribute('data-titre') || '');
+        const pref = document.getElementById('preferences');
+        if (pref) pref.value = `Sortie : ${titre}`;
+      });
+    });
+  }
+
+  fetch('https://backend-uhg3.onrender.com/api/sorties')
+    .then(r => r.ok ? r.json() : [])
+    .then(rows => renderSorties(rows))
+    .catch(() => {});
+</script>
+</body>
+</html>
