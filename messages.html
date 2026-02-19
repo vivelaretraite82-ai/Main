@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Messagerie — Vive la Retraite</title>
+  <link rel="icon" href="logo.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="logo.ico">
   <style>
     :root {
       --bg: #0E1111;
@@ -141,7 +143,8 @@
   <div class="container" id="app"></div>
 
   <script>
-    const API_BASE = '';
+    // Toujours pointer vers le backend public pour éviter les erreurs d’origine
+    const API_BASE = 'https://backend-uhg3.onrender.com';
     const ADMIN_EMAIL = 'vivelaretraite82@gmail.com';
     let authToken = window.localStorage.getItem('vivelaretraite-token') || '';
     let currentUser = null;
@@ -339,4 +342,3 @@
   </script>
 </body>
 </html>
-

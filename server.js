@@ -9,6 +9,7 @@ const jwt = require('jsonwebtoken');
 
 const app = express();
 const DATA_DIR = process.env.DATA_DIR || (process.env.RENDER ? '/var/data' : __dirname);
+try { if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true }); } catch {}
 const DB_PATH = path.join(DATA_DIR, 'vivelaretraite.db');
 
 const db = new sqlite3.Database(DB_PATH);
@@ -545,7 +546,8 @@ app.delete('/admin/sorties/:id', auth, requireAdmin, (req, res) => {
     db.run('DELETE FROM sorties WHERE id = ?', [id], function(err) {
       if (err) return res.status(500).json({ error: 'db_error' });
       if (row && row.image_path) {
-        const full = path.join(__dirname, row.image_path);
+        const clean = String(row.image_path).replace(/^\/+/, ''); // remove leading slash
+        const full = path.join(DATA_DIR, clean);
         fs.unlink(full, () => {});
       }
       res.json({ deleted: this.changes > 0 });
