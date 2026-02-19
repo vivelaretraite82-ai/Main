@@ -15,6 +15,10 @@ const DB_PATH = path.join(DATA_DIR, 'vivelaretraite.db');
 let Pool;
 try { ({ Pool } = require('pg')); } catch {}
 const USE_PG = !!((process.env.DATABASE_URL && Pool) || (process.env.PGHOST && Pool));
+if (process.env.RENDER && !USE_PG) {
+  console.error('DATABASE_URL manquant ou module pg non disponible. Configuration requise pour éviter la perte de données.');
+  process.exit(1);
+}
 let db;
 let pgPool;
 
@@ -473,6 +477,9 @@ function saveBase64Image(dataUrl) {
   const buf = Buffer.from(base64, 'base64');
   // basic server-side size guard ~5MB
   if (buf.length > 5 * 1024 * 1024) return null;
+  if (USE_PG) {
+    return dataUrl;
+  }
   const uploadsDir = ensureUploadsDir();
   const fname = `sortie-${Date.now()}-${Math.random().toString(36).slice(2,8)}.${extMap[mime]}`;
   const full = path.join(uploadsDir, fname);
