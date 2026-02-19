@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vive la Retraite — Sorties & Activités pour Seniors</title>
-<link rel="icon" href="logo.ico" type="image/x-icon">
+<link rel="icon" href="haut%20du%20site.jpg" type="image/jpeg">
+<link rel="apple-touch-icon" href="haut%20du%20site.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
@@ -1528,7 +1529,7 @@
           <div class="form-group full">
             <label class="form-label" for="admin-sortie-image">Image (optionnelle)</label>
             <input class="form-input" type="file" id="admin-sortie-image" name="image" accept="image/*">
-            <small class="form-help">JPEG/PNG/WEBP, taille conseillée ≤ 3 Mo.</small>
+            <small class="form-help" id="admin-image-help">Formats acceptés: JPG, PNG, WEBP • Max 5 Mo.</small>
           </div>
         </div>
         <div class="form-row-bottom">
@@ -2404,6 +2405,27 @@
   const adminMessageText = document.getElementById('admin-message-text');
   const adminThreadHeader = document.getElementById('admin-thread-header');
   let adminActiveUserId = null;
+  const adminImageInput = document.getElementById('admin-sortie-image');
+  const adminImageHelp = document.getElementById('admin-image-help');
+  if (adminImageInput) {
+    adminImageInput.addEventListener('change', () => {
+      if (!adminImageHelp) return;
+      const f = adminImageInput.files && adminImageInput.files[0] ? adminImageInput.files[0] : null;
+      if (!f) {
+        adminImageHelp.textContent = 'Formats acceptés: JPG, PNG, WEBP • Max 5 Mo.';
+        return;
+      }
+      const okType = ['image/jpeg', 'image/png', 'image/webp'].includes(f.type);
+      const okSize = f.size <= 5 * 1024 * 1024;
+      if (okType && okSize) {
+        adminImageHelp.textContent = `Fichier sélectionné: ${f.name} — OK (≤ 5 Mo, JPG/PNG/WEBP)`;
+      } else if (!okType) {
+        adminImageHelp.textContent = 'Format non pris en charge. Utilisez JPG, PNG ou WEBP (max 5 Mo).';
+      } else {
+        adminImageHelp.textContent = 'Image trop lourde. Taille maximale 5 Mo.';
+      }
+    });
+  }
   if (adminSortieForm) {
     adminSortieForm.addEventListener('submit', (e) => {
       e.preventDefault();
