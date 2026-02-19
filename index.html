@@ -35,6 +35,19 @@
     --text: #F3F3F1;
   }
 
+  body[data-theme="dark"] .card-body,
+  body[data-theme="dark"] .form-card,
+  body[data-theme="dark"] .form-card p,
+  body[data-theme="dark"] .form-label,
+  body[data-theme="dark"] .form-input,
+  body[data-theme="dark"] .form-textarea,
+  body[data-theme="dark"] .form-row-bottom small,
+  body[data-theme="dark"] .member-status,
+  body[data-theme="dark"] .member-reservations,
+  body[data-theme="dark"] .card-meta {
+    color: #111111;
+  }
+
   body[data-theme="dark"] .card-title { font-weight: 600; }
   body[data-theme="dark"] .card-desc { font-weight: 600; }
 
@@ -612,7 +625,7 @@
   }
 
   .card-desc {
-    font-size: .95rem;
+    font-size: 1rem;
     color: var(--text);
     font-weight: 500;
     line-height: 1.7;
@@ -622,8 +635,9 @@
   .card-meta {
     display: flex;
     gap: 1rem;
-    font-size: .75rem;
-    color: var(--text-light);
+    font-size: .9rem;
+    color: #111111;
+    font-weight: 500;
     padding-top: 1rem;
     border-top: 1px solid var(--border);
   }
@@ -1288,15 +1302,7 @@
 <!-- STATS -->
 <div class="stats">
   <div class="stat-item reveal">
-    <div class="stat-num">19</div>
-    <div class="stat-label">Sorties organisées</div>
-  </div>
-  <div class="stat-item reveal">
-    <div class="stat-num">21</div>
-    <div class="stat-label">Membres heureux</div>
-  </div>
-  <div class="stat-item reveal">
-    <div class="stat-num">45+</div>
+    <div class="stat-num">21+</div>
     <div class="stat-label">Types d'activités</div>
   </div>
   <div class="stat-item reveal">
