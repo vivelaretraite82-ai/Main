@@ -2273,6 +2273,7 @@
       empty.style.display = 'block';
       return;
     }
+    if (empty) empty.style.display = 'none';
     list.innerHTML = rows.map(s => {
       const id = s.id ? String(s.id) : '';
       const safeTitre = s.titre ? String(s.titre) : '';

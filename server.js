@@ -8,7 +8,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const app = express();
-const DB_PATH = path.join(__dirname, 'vivelaretraite.db');
+const DATA_DIR = process.env.DATA_DIR || (process.env.RENDER ? '/var/data' : __dirname);
+const DB_PATH = path.join(DATA_DIR, 'vivelaretraite.db');
 
 const db = new sqlite3.Database(DB_PATH);
 
@@ -129,6 +130,7 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.json({ limit: '50mb' }));
 
 app.use(express.static(__dirname));
+app.use('/uploads', express.static(path.join(DATA_DIR, 'uploads')));
 
 function getTransporter() {
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_SECURE } = process.env;
@@ -292,7 +294,7 @@ function requireAdmin(req, res, next) {
 }
 
 function ensureUploadsDir() {
-  const dir = path.join(__dirname, 'uploads');
+  const dir = path.join(DATA_DIR, 'uploads');
   try {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir);
   } catch {}
@@ -316,7 +318,7 @@ function saveBase64Image(dataUrl) {
   const full = path.join(uploadsDir, fname);
   try {
     fs.writeFileSync(full, buf);
-    return 'uploads/' + fname;
+    return '/uploads/' + fname;
   } catch {
     return null;
   }
