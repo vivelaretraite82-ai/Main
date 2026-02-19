@@ -32,6 +32,7 @@
     --gold: #D8C48A;
     --gold-light: #4B4330;
     --border: #283128;
+    --text: #F3F3F1;
   }
 
   body[data-theme="dark"] .card-title { font-weight: 600; }
@@ -1231,8 +1232,8 @@
 <section class="hero" id="accueil">
   <div class="hero-content">
     <div class="hero-tag">Vive la Retraite avec Alexandra</div>
-    <h1>Des sorties<br>qui donnent envie<br><em>de sortir de chez soi</em></h1>
-    <p class="hero-desc">Alexandra, maman de trois enfants et ancienne éleveuse animalière, accompagne avec douceur et bienveillance les seniors dans des activités choisies pour leur confort, leur sécurité et leur plaisir.</p>
+    <h1>Chaque journée<br>mérite d’être<br><em>une aventure</em></h1>
+    <p class="hero-desc">Alexandra accompagne les seniors dans la découverte d’activités culturelles, sportives et sociales, pensées pour leur confort et leur épanouissement.</p>
     <div class="hero-actions">
       <a href="#activites" class="btn-primary">Découvrir les sorties</a>
       <a href="#comment" class="btn-outline"><span class="arrow"></span>Comment ça marche</a>
@@ -1532,7 +1533,7 @@
         <div class="author-avatar">👩</div>
         <div>
           <div class="author-name">Marguerite D.</div>
-          <div class="author-info">72 ans — Membre depuis 2 ans</div>
+          <div class="author-info">72 ans — Membre depuis 3 mois</div>
         </div>
       </div>
     </div>
@@ -1554,7 +1555,7 @@
         <div class="author-avatar">👴</div>
         <div>
           <div class="author-name">André M.</div>
-          <div class="author-info">80 ans — Membre depuis 3 ans</div>
+          <div class="author-info">80 ans — Membre depuis 1 mois</div>
         </div>
       </div>
     </div>
@@ -1667,43 +1668,6 @@
     </div>
   </div>
   <div class="member-grid">
-    <div class="form-card reveal">
-      <h3>Créer mon compte</h3>
-      <p>Un email et un mot de passe suffisent pour créer votre accès personnel.</p>
-      <form id="signup-form">
-        <div class="form-grid">
-          <div class="form-group">
-            <label class="form-label" for="signup-email"><span>*</span> Email</label>
-            <input class="form-input" type="email" id="signup-email" name="email" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="signup-password"><span>*</span> Mot de passe</label>
-            <input class="form-input" type="password" id="signup-password" name="password" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="signup-password-confirm"><span>*</span> Confirmation</label>
-            <input class="form-input" type="password" id="signup-password-confirm" name="password_confirm" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="signup-prenom">Prénom</label>
-            <input class="form-input" type="text" id="signup-prenom" name="prenom">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="signup-nom">Nom</label>
-            <input class="form-input" type="text" id="signup-nom" name="nom">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="signup-telephone">Téléphone</label>
-            <input class="form-input" type="tel" id="signup-telephone" name="telephone">
-          </div>
-        </div>
-        <div class="form-row-bottom">
-          <small>Vous pourrez supprimer votre compte sur simple demande.</small>
-          <button type="submit" class="btn-primary">Créer mon compte</button>
-        </div>
-      </form>
-      <div class="form-note" id="signup-note"></div>
-    </div>
     <div class="form-card reveal">
       <h3>Connexion et suivi</h3>
       <p>Connectez-vous pour voir les sorties réservées en ligne.</p>
@@ -2074,59 +2038,7 @@
     });
   }
 
-  const signupForm = document.getElementById('signup-form');
-  const signupNote = document.getElementById('signup-note');
   const loginForm = document.getElementById('login-form');
-
-  if (signupForm) {
-    signupForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (signupNote) signupNote.textContent = '';
-      const formData = new FormData(signupForm);
-      const email = String(formData.get('email') || '').trim();
-      const password = String(formData.get('password') || '');
-      const confirm = String(formData.get('password_confirm') || '');
-      if (!email || !password) {
-        if (signupNote) signupNote.textContent = 'Merci de renseigner votre email et un mot de passe.';
-        return;
-      }
-      if (password !== confirm) {
-        if (signupNote) signupNote.textContent = 'Les mots de passe ne correspondent pas.';
-        return;
-      }
-      const payload = {
-        email,
-        password,
-        prenom: String(formData.get('prenom') || ''),
-        nom: String(formData.get('nom') || ''),
-        telephone: String(formData.get('telephone') || '')
-      };
-      fetch(API_BASE + '/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
-        .then(r => r.json().then(data => ({ ok: r.ok, data })))
-        .then(({ ok, data }) => {
-          if (ok && data && data.token && data.user) {
-            authToken = data.token;
-            window.localStorage.setItem('vivelaretraite-token', authToken);
-            const userEmail = data.user.email || email;
-            setMemberStatus('Connecté(e) en tant que ' + userEmail + '.');
-            if (signupNote) signupNote.textContent = 'Compte créé avec succès.';
-            loadReservations();
-          } else {
-            const code = data && data.error;
-            let msg = 'Impossible de créer le compte.';
-            if (code === 'email_exists') msg = 'Un compte existe déjà avec cet email.';
-            if (signupNote) signupNote.textContent = msg;
-          }
-        })
-        .catch(() => {
-          if (signupNote) signupNote.textContent = 'Erreur réseau. Merci de réessayer.';
-        });
-    });
-  }
 
   if (loginForm) {
     loginForm.addEventListener('submit', (e) => {
