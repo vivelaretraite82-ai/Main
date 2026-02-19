@@ -235,7 +235,7 @@
     }
   </style>
 </head>
-<body data-theme="dark">
+<body>
   <nav>
     <div class="nav-logo">Vive la Retraite</div>
     <div class="nav-right">
@@ -259,6 +259,56 @@
     <div id="sorties-list" class="activities-grid"></div>
     <div id="sorties-empty" class="section-sub" style="display:none;">Aucune sortie publiée pour le moment.</div>
   </main>
+  <div id="inscription-modal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:200;">
+    <div style="background:var(--warm-white);border:1px solid var(--border);border-radius:18px;max-width:720px;width:92%;padding:1.2rem 1.2rem 1.4rem;box-shadow:0 24px 60px rgba(0,0,0,.25);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;">
+        <h2 style="font-family:'Cormorant Garamond',serif;font-size:1.7rem;margin:0;">Inscription</h2>
+        <button id="close-inscription" style="border:none;background:transparent;color:var(--text);font-size:1rem;cursor:pointer;">Fermer</button>
+      </div>
+      <p class="section-sub" style="margin-bottom:1rem;">Remplissez ce formulaire pour être rappelé(e). La demande est transmise à l’administratrice.</p>
+      <form id="sortie-inscription-form" method="post">
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;">
+          <div>
+            <label style="display:block;font-size:.85rem;margin-bottom:.25rem;">Prénom *</label>
+            <input name="prenom" required style="width:100%;padding:.65rem .8rem;border:1px solid var(--border);border-radius:10px;background:#fff;">
+          </div>
+          <div>
+            <label style="display:block;font-size:.85rem;margin-bottom:.25rem;">Nom *</label>
+            <input name="nom" required style="width:100%;padding:.65rem .8rem;border:1px solid var(--border);border-radius:10px;background:#fff;">
+          </div>
+          <div>
+            <label style="display:block;font-size:.85rem;margin-bottom:.25rem;">Email *</label>
+            <input type="email" name="email" required style="width:100%;padding:.65rem .8rem;border:1px solid var(--border);border-radius:10px;background:#fff;">
+          </div>
+          <div>
+            <label style="display:block;font-size:.85rem;margin-bottom:.25rem;">Mot de passe (espace membre) *</label>
+            <input type="password" name="password" required style="width:100%;padding:.65rem .8rem;border:1px solid var(--border);border-radius:10px;background:#fff;">
+          </div>
+          <div>
+            <label style="display:block;font-size:.85rem;margin-bottom:.25rem;">Téléphone</label>
+            <input name="telephone" style="width:100%;padding:.65rem .8rem;border:1px solid var(--border);border-radius:10px;background:#fff;">
+          </div>
+          <div>
+            <label style="display:block;font-size:.85rem;margin-bottom:.25rem;">Ville</label>
+            <input name="ville" style="width:100%;padding:.65rem .8rem;border:1px solid var(--border);border-radius:10px;background:#fff;">
+          </div>
+          <div>
+            <label style="display:block;font-size:.85rem;margin-bottom:.25rem;">Année de naissance</label>
+            <input type="number" name="naissance" min="1925" max="2010" style="width:100%;padding:.65rem .8rem;border:1px solid var(--border);border-radius:10px;background:#fff;">
+          </div>
+          <div style="grid-column:1/-1;">
+            <label style="display:block;font-size:.85rem;margin-bottom:.25rem;">Vos préférences</label>
+            <textarea id="inscription-preferences" name="preferences" rows="3" style="width:100%;padding:.65rem .8rem;border:1px solid var(--border);border-radius:10px;background:#fff;"></textarea>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1rem;">
+          <small style="color:var(--text-light);">Les informations restent confidentielles et ne sont jamais partagées.</small>
+          <button type="submit" class="btn-primary">Valider mon inscription</button>
+        </div>
+      </form>
+      <div id="inscription-note" class="section-sub" style="display:none;margin-top:.6rem;"></div>
+    </div>
+  </div>
   <script>
     const API_BASE = 'https://backend-uhg3.onrender.com';
     function categoryEmoji(c) {
@@ -308,11 +358,20 @@
                 '<span>' + dateIso + '</span>' +
                 (lieu ? '<span>• ' + lieu + '</span>' : '') +
               '</div>' +
-              '<a class="btn-primary" href="index.html#espace-membre" data-id="' + id + '">S\'inscrire</a>' +
+              '<button class="btn-primary open-inscription" type="button" data-id="' + id + '" data-title="' + (titre.replace(/"/g,'&quot;')) + '">S\\'inscrire</button>' +
             '</div>' +
           '</div>'
         );
       }).join('');
+      document.querySelectorAll('.open-inscription').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const title = e.currentTarget.getAttribute('data-title') || '';
+          const modal = document.getElementById('inscription-modal');
+          const pref = document.getElementById('inscription-preferences');
+          if (pref) pref.value = 'Sortie : ' + title;
+          modal.style.display = 'flex';
+        });
+      });
     }
     function fetchSorties() {
       fetch(API_BASE + '/api/sorties')
@@ -325,7 +384,38 @@
         });
     }
     fetchSorties();
+    const closeBtn = document.getElementById('close-inscription');
+    const modal = document.getElementById('inscription-modal');
+    if (closeBtn) closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
+    const form = document.getElementById('sortie-inscription-form');
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(form);
+        const params = new URLSearchParams();
+        for (const [k,v] of fd.entries()) params.append(k, v);
+        try {
+          const res = await fetch(API_BASE + '/inscription', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString(),
+            redirect: 'follow'
+          });
+          const note = document.getElementById('inscription-note');
+          if (res.ok) {
+            form.reset();
+            if (note) { note.style.display = 'block'; note.textContent = 'Inscription envoyée. Nous vous recontactons rapidement.'; }
+            setTimeout(() => { modal.style.display = 'none'; }, 900);
+          } else {
+            if (note) { note.style.display = 'block'; note.textContent = 'Envoi impossible. Merci de réessayer plus tard.'; }
+          }
+        } catch {
+          const note = document.getElementById('inscription-note');
+          if (note) { note.style.display = 'block'; note.textContent = 'Erreur réseau. Merci de réessayer.'; }
+        }
+      });
+    }
   </script>
 </body>
 </html>
-

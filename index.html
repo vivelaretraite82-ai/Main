@@ -1360,7 +1360,7 @@
   }
 </style>
 </head>
-<body data-theme="dark">
+<body>
 
 <!-- NAV -->
 <nav>
@@ -2913,7 +2913,7 @@
     }
   }
   const storedTheme = window.localStorage.getItem('vivelaretraite-theme');
-  applyTheme(storedTheme === 'light' ? 'light' : 'dark');
+  applyTheme(storedTheme === 'dark' ? 'dark' : 'light');
   if (themeToggle) {
     themeToggle.addEventListener('click', () => {
       const current = document.body.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
