@@ -12,96 +12,164 @@ const DATA_DIR = process.env.DATA_DIR || __dirname;
 try { if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true }); } catch {}
 const DB_PATH = path.join(DATA_DIR, 'vivelaretraite.db');
 
-const db = new sqlite3.Database(DB_PATH);
+let Pool;
+try { ({ Pool } = require('pg')); } catch {}
+const USE_PG = !!((process.env.DATABASE_URL && Pool) || (process.env.PGHOST && Pool));
+let db;
+let pgPool;
 
-db.serialize(() => {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS registrations (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      prenom TEXT NOT NULL,
-      nom TEXT NOT NULL,
-      email TEXT NOT NULL,
-      telephone TEXT,
-      ville TEXT,
-      naissance TEXT,
-      preferences TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
+function normalizePgSql(sql) {
+  let q = sql;
+  if (/insert\s+or\s+ignore/i.test(q)) {
+    q = q.replace(/insert\s+or\s+ignore/i, 'INSERT');
+    if (!/\bon\s+conflict\b/i.test(q)) q += ' ON CONFLICT DO NOTHING';
+  }
+  return q;
+}
 
-  db.run(`
-    CREATE TABLE IF NOT EXISTS contacts (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      nom TEXT NOT NULL,
-      email TEXT NOT NULL,
-      telephone TEXT,
-      message TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-  
-  db.run(`
-    CREATE TABLE IF NOT EXISTS sorties (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      titre TEXT NOT NULL,
-      description TEXT,
-      date_iso TEXT,
-      lieu TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
+if (USE_PG) {
+  pgPool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.PGSSLMODE === 'disable' ? false : { rejectUnauthorized: false }
+  });
+  db = {
+    all(sql, params, cb) {
+      if (typeof params === 'function') { cb = params; params = []; }
+      sql = normalizePgSql(sql);
+      pgPool.query(sql, params || [])
+        .then(r => cb && cb(null, r.rows))
+        .catch(e => cb && cb(e));
+    },
+    get(sql, params, cb) {
+      if (typeof params === 'function') { cb = params; params = []; }
+      sql = normalizePgSql(sql);
+      pgPool.query(sql, params || [])
+        .then(r => cb && cb(null, r.rows[0] || null))
+        .catch(e => cb && cb(e));
+    },
+    run(sql, params, cb) {
+      if (typeof params === 'function') { cb = params; params = []; }
+      let query = normalizePgSql(sql);
+      const needsReturning = /^\s*insert/i.test(query) && !/\breturning\b/i.test(query);
+      if (needsReturning) query += ' RETURNING id';
+      pgPool.query(query, params || [])
+        .then(r => {
+          const ctx = { lastID: needsReturning && r.rows[0] ? r.rows[0].id : undefined, changes: r.rowCount };
+          cb && cb.call(ctx, null);
+        })
+        .catch(e => cb && cb(e));
+    },
+    prepare(sql) {
+      return {
+        run: function() {
+          const args = Array.from(arguments);
+          const cb = typeof args[args.length - 1] === 'function' ? args.pop() : null;
+          const params = args;
+          let query = normalizePgSql(sql);
+          const needsReturning = /^\s*insert/i.test(query) && !/\breturning\b/i.test(query);
+          if (needsReturning) query += ' RETURNING id';
+          pgPool.query(query, params)
+            .then(r => {
+              const ctx = { lastID: needsReturning && r.rows[0] ? r.rows[0].id : undefined, changes: r.rowCount };
+              cb && cb.call(ctx, null);
+            })
+            .catch(e => cb && cb(e));
+        },
+        finalize: function() {}
+      };
+    }
+  };
+} else {
+  db = new sqlite3.Database(DB_PATH);
+  db.serialize(() => {
+    db.run(`
+      CREATE TABLE IF NOT EXISTS registrations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        prenom TEXT NOT NULL,
+        nom TEXT NOT NULL,
+        email TEXT NOT NULL,
+        telephone TEXT,
+        ville TEXT,
+        naissance TEXT,
+        preferences TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
-  db.run(`ALTER TABLE sorties ADD COLUMN categorie TEXT`, () => {});
-  db.run(`ALTER TABLE sorties ADD COLUMN image_path TEXT`, () => {});
+    db.run(`
+      CREATE TABLE IF NOT EXISTS contacts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nom TEXT NOT NULL,
+        email TEXT NOT NULL,
+        telephone TEXT,
+        message TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    db.run(`
+      CREATE TABLE IF NOT EXISTS sorties (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        titre TEXT NOT NULL,
+        description TEXT,
+        date_iso TEXT,
+        lieu TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
-  db.run(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      email TEXT UNIQUE NOT NULL,
-      password_hash TEXT NOT NULL,
-      prenom TEXT,
-      nom TEXT,
-      telephone TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
+    db.run(\`ALTER TABLE sorties ADD COLUMN categorie TEXT\`, () => {});
+    db.run(\`ALTER TABLE sorties ADD COLUMN image_path TEXT\`, () => {});
 
-  db.run(`
-    CREATE TABLE IF NOT EXISTS reservations (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
-      sortie_id INTEGER NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE(user_id, sortie_id),
-      FOREIGN KEY(user_id) REFERENCES users(id),
-      FOREIGN KEY(sortie_id) REFERENCES sorties(id)
-    )
-  `);
+    db.run(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        prenom TEXT,
+        nom TEXT,
+        telephone TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
-  db.run(`
-    CREATE TABLE IF NOT EXISTS comments (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
-      sortie_id INTEGER NOT NULL,
-      text TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY(user_id) REFERENCES users(id),
-      FOREIGN KEY(sortie_id) REFERENCES sorties(id)
-    )
-  `);
+    db.run(`
+      CREATE TABLE IF NOT EXISTS reservations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        sortie_id INTEGER NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, sortie_id),
+        FOREIGN KEY(user_id) REFERENCES users(id),
+        FOREIGN KEY(sortie_id) REFERENCES sorties(id)
+      )
+    `);
 
-  db.run(`
-    CREATE TABLE IF NOT EXISTS messages (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      sender_id INTEGER NOT NULL,
-      recipient_id INTEGER NOT NULL,
-      body TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY(sender_id) REFERENCES users(id),
-      FOREIGN KEY(recipient_id) REFERENCES users(id)
-    )
-  `);
-});
+    db.run(`
+      CREATE TABLE IF NOT EXISTS comments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        sortie_id INTEGER NOT NULL,
+        text TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(user_id) REFERENCES users(id),
+        FOREIGN KEY(sortie_id) REFERENCES sorties(id)
+      )
+    `);
+
+    db.run(`
+      CREATE TABLE IF NOT EXISTS messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sender_id INTEGER NOT NULL,
+        recipient_id INTEGER NOT NULL,
+        body TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(sender_id) REFERENCES users(id),
+        FOREIGN KEY(recipient_id) REFERENCES users(id)
+      )
+    `);
+  });
+}
 
 function ensureAdminUser() {
   const email = (process.env.ADMIN_EMAIL || 'vivelaretraite82@gmail.com').trim().toLowerCase();
@@ -119,7 +187,98 @@ function ensureAdminUser() {
   );
 }
 
-ensureAdminUser();
+async function ensurePgSchema() {
+  if (!USE_PG) return;
+  await pgPool.query(`
+    CREATE TABLE IF NOT EXISTS registrations (
+      id SERIAL PRIMARY KEY,
+      prenom TEXT NOT NULL,
+      nom TEXT NOT NULL,
+      email TEXT NOT NULL,
+      telephone TEXT,
+      ville TEXT,
+      naissance TEXT,
+      preferences TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+  await pgPool.query(`
+    CREATE TABLE IF NOT EXISTS contacts (
+      id SERIAL PRIMARY KEY,
+      nom TEXT NOT NULL,
+      email TEXT NOT NULL,
+      telephone TEXT,
+      message TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+  await pgPool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      prenom TEXT,
+      nom TEXT,
+      telephone TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+  await pgPool.query(`
+    CREATE TABLE IF NOT EXISTS sorties (
+      id SERIAL PRIMARY KEY,
+      titre TEXT NOT NULL,
+      description TEXT,
+      date_iso TEXT,
+      lieu TEXT,
+      categorie TEXT,
+      image_path TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+  await pgPool.query(`
+    CREATE TABLE IF NOT EXISTS reservations (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      sortie_id INTEGER NOT NULL REFERENCES sorties(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(user_id, sortie_id)
+    )`);
+  await pgPool.query(`
+    CREATE TABLE IF NOT EXISTS comments (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      sortie_id INTEGER NOT NULL REFERENCES sorties(id) ON DELETE CASCADE,
+      text TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+  await pgPool.query(`
+    CREATE TABLE IF NOT EXISTS messages (
+      id SERIAL PRIMARY KEY,
+      sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      recipient_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      body TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`);
+}
+
+async function ensureAdminUserPg() {
+  if (!USE_PG) return;
+  const email = (process.env.ADMIN_EMAIL || 'vivelaretraite82@gmail.com').trim().toLowerCase();
+  const password = process.env.ADMIN_PASSWORD || 'luanamax?';
+  const hash = bcrypt.hashSync(password, 10);
+  const prenom = 'Alexandra';
+  const telephone = '0667095143';
+  await pgPool.query(
+    `INSERT INTO users (email, password_hash, prenom, nom, telephone)
+     VALUES ($1, $2, $3, $4, $5)
+     ON CONFLICT (email) DO UPDATE SET
+       password_hash = EXCLUDED.password_hash,
+       prenom = COALESCE(EXCLUDED.prenom, users.prenom),
+       nom = COALESCE(EXCLUDED.nom, users.nom),
+       telephone = COALESCE(EXCLUDED.telephone, users.telephone)`,
+    [email, hash, prenom, null, telephone]
+  );
+}
+
+if (!USE_PG) {
+  ensureAdminUser();
+}
 
 app.use(cors({
   origin: ['http://localhost:3000', 'https://vivelaretraite82-ai.github.io'],
@@ -636,4 +795,18 @@ function startServer(initialPort) {
 }
 
 const PREFERRED_PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-startServer(PREFERRED_PORT);
+
+async function bootstrap() {
+  if (USE_PG) {
+    try {
+      await ensurePgSchema();
+      await ensureAdminUserPg();
+    } catch (e) {
+      console.error('Erreur initialisation PostgreSQL:', e);
+      process.exit(1);
+    }
+  }
+  startServer(PREFERRED_PORT);
+}
+
+bootstrap();
