@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Vive la Retraite</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; background: #f7f7f7; color: #222; }
+    h1 { margin-bottom: .5rem; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+    .card { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 1rem; }
+    table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+    th, td { border-bottom: 1px solid #eee; padding: .5rem .4rem; text-align: left; vertical-align: top; }
+    th { background: #fafafa; font-weight: bold; }
+    input, textarea { width: 100%; padding: .6rem; border: 1px solid #ccc; border-radius: 4px; }
+    label { display: block; margin: .6rem 0 .3rem; font-weight: 600; }
+    button { padding: .6rem 1rem; background: #2f855a; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #276749; }
+    .muted { color: #666; font-size: .9rem; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .success { color: #2f855a; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <h1>Admin — Vive la Retraite</h1>
+    <div id="status" class="muted"></div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Créer une sortie</h2>
+      <form id="sortie-form" method="post" action="/admin/sorties">
+        <label for="titre">Titre</label>
+        <input id="titre" name="titre" required placeholder="Ex: Sortie théâtre – Le Cid">
+        <label for="date_iso">Date/heure</label>
+        <input id="date_iso" name="date_iso" type="datetime-local">
+        <label for="lieu">Lieu</label>
+        <input id="lieu" name="lieu" placeholder="Ex: Théâtre municipal, Toulouse">
+        <label for="description">Description</label>
+        <textarea id="description" name="description" rows="4" placeholder="Détails pratiques, transport, accessibilité…"></textarea>
+        <div style="margin-top:.8rem;">
+          <button type="submit">Publier la sortie</button>
+        </div>
+      </form>
+      <p class="muted" id="createdNote"></p>
+    </div>
+
+    <div class="card">
+      <h2>Sorties publiées</h2>
+      <div id="sorties-wrap" class="muted">Chargement…</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:2rem;">
+    <h2>Inscriptions</h2>
+    <div class="muted">Dernières inscriptions (email, nom, prénom, téléphone, préférences)</div>
+    <div id="registrations-wrap">Chargement…</div>
+  </div>
+
+  <script>
+    const created = new URLSearchParams(location.search).get('created');
+    if (created) {
+      document.getElementById('createdNote').innerText = 'Sortie créée avec succès.';
+      document.getElementById('createdNote').className = 'success';
+    }
+
+    fetch('/api/registrations')
+      .then(r => r.json())
+      .then(rows => {
+        if (!Array.isArray(rows) || rows.length === 0) {
+          document.getElementById('registrations-wrap').innerText = 'Aucune inscription pour le moment.';
+          return;
+        }
+        const table = document.createElement('table');
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Nom</th>
+              <th>Prénom</th>
+              <th>Téléphone</th>
+              <th>Préférences</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(r => `
+              <tr>
+                <td>${r.email || ''}</td>
+                <td>${r.nom || ''}</td>
+                <td>${r.prenom || ''}</td>
+                <td>${r.telephone || ''}</td>
+                <td>${r.preferences || ''}</td>
+                <td>${r.created_at || ''}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        `;
+        document.getElementById('registrations-wrap').innerHTML = '';
+        document.getElementById('registrations-wrap').appendChild(table);
+      })
+      .catch(() => {
+        document.getElementById('registrations-wrap').innerText = 'Erreur de chargement.';
+      });
+
+    fetch('/api/sorties')
+      .then(r => r.json())
+      .then(rows => {
+        const wrap = document.getElementById('sorties-wrap');
+        if (!Array.isArray(rows) || rows.length === 0) {
+          wrap.innerText = 'Aucune sortie publiée.';
+          return;
+        }
+        const table = document.createElement('table');
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th>Titre</th>
+              <th>Date</th>
+              <th>Lieu</th>
+              <th>Description</th>
+              <th>Créée le</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(s => `
+              <tr>
+                <td>${s.titre || ''}</td>
+                <td>${s.date_iso || ''}</td>
+                <td>${s.lieu || ''}</td>
+                <td>${s.description || ''}</td>
+                <td>${s.created_at || ''}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        `;
+        wrap.innerHTML = '';
+        wrap.appendChild(table);
+      })
+      .catch(() => {
+        document.getElementById('sorties-wrap').innerText = 'Erreur de chargement.';
+      });
+  </script>
+</body>
+</html>
