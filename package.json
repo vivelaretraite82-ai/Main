@@ -1,0 +1,15 @@
+{
+  "name": "site-maman-backend",
+  "version": "1.0.0",
+  "description": "Backend pour inscriptions et contacts SérénJours avec SQLite",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "nodemailer": "^6.10.1",
+    "sqlite3": "^5.1.7",
+    "cors": "^2.8.5"
+  }
+}
