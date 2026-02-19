@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
 const nodemailer = require('nodemailer');
 const cors = require('cors');
@@ -47,6 +48,9 @@ db.serialize(() => {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  db.run(`ALTER TABLE sorties ADD COLUMN categorie TEXT`, () => {});
+  db.run(`ALTER TABLE sorties ADD COLUMN image_path TEXT`, () => {});
 
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
@@ -287,6 +291,37 @@ function requireAdmin(req, res, next) {
   next();
 }
 
+function ensureUploadsDir() {
+  const dir = path.join(__dirname, 'uploads');
+  try {
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+  } catch {}
+  return dir;
+}
+
+function saveBase64Image(dataUrl) {
+  if (!dataUrl) return null;
+  const m = String(dataUrl).match(/^data:(.+);base64,(.*)$/);
+  if (!m) return null;
+  const mime = m[1];
+  const base64 = m[2];
+  const allowed = ['image/jpeg','image/png','image/webp'];
+  const extMap = { 'image/jpeg':'jpg', 'image/png':'png', 'image/webp':'webp' };
+  if (!allowed.includes(mime)) return null;
+  const buf = Buffer.from(base64, 'base64');
+  // basic server-side size guard ~5MB
+  if (buf.length > 5 * 1024 * 1024) return null;
+  const uploadsDir = ensureUploadsDir();
+  const fname = `sortie-${Date.now()}-${Math.random().toString(36).slice(2,8)}.${extMap[mime]}`;
+  const full = path.join(uploadsDir, fname);
+  try {
+    fs.writeFileSync(full, buf);
+    return 'uploads/' + fname;
+  } catch {
+    return null;
+  }
+}
+
 app.post('/auth/signup', (req, res) => {
   const { email, password, prenom, nom, telephone } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'email_password_required' });
@@ -393,7 +428,7 @@ app.get('/api/contacts', (req, res) => {
 });
 
 app.get('/api/sorties', (req, res) => {
-  db.all('SELECT id, titre, description, date_iso, lieu, created_at FROM sorties ORDER BY date_iso ASC, created_at DESC', (err, rows) => {
+  db.all('SELECT id, titre, description, date_iso, lieu, categorie, image_path, created_at FROM sorties ORDER BY date_iso ASC, created_at DESC', (err, rows) => {
     if (err) return res.status(500).json({ error: 'db_error' });
     res.json(rows);
   });
@@ -476,17 +511,23 @@ app.get('/admin/reservations', auth, requireAdmin, (req, res) => {
 });
 
 app.post('/admin/api/sorties', auth, requireAdmin, (req, res) => {
-  const { titre, description, date_iso, lieu } = req.body || {};
+  const { titre, description, date_iso, lieu, categorie, image_base64 } = req.body || {};
   if (!titre || !String(titre).trim()) return res.status(400).json({ error: 'titre_required' });
+  let image_path = null;
+  if (image_base64) {
+    image_path = saveBase64Image(image_base64) || null;
+  }
   const stmt = db.prepare(`
-    INSERT INTO sorties (titre, description, date_iso, lieu)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO sorties (titre, description, date_iso, lieu, categorie, image_path)
+    VALUES (?, ?, ?, ?, ?, ?)
   `);
   stmt.run(
     String(titre).trim(),
     description ? String(description).trim() : null,
     date_iso ? String(date_iso).trim() : null,
     lieu ? String(lieu).trim() : null,
+    categorie ? String(categorie).trim() : null,
+    image_path,
     function(err) {
       if (err) return res.status(500).json({ error: 'db_error' });
       res.json({ id: this.lastID });
@@ -498,9 +539,15 @@ app.post('/admin/api/sorties', auth, requireAdmin, (req, res) => {
 app.delete('/admin/sorties/:id', auth, requireAdmin, (req, res) => {
   const id = parseInt(req.params.id, 10);
   if (!id) return res.status(400).json({ error: 'invalid_id' });
-  db.run('DELETE FROM sorties WHERE id = ?', [id], function(err) {
-    if (err) return res.status(500).json({ error: 'db_error' });
-    res.json({ deleted: this.changes > 0 });
+  db.get('SELECT image_path FROM sorties WHERE id = ?', [id], (e, row) => {
+    db.run('DELETE FROM sorties WHERE id = ?', [id], function(err) {
+      if (err) return res.status(500).json({ error: 'db_error' });
+      if (row && row.image_path) {
+        const full = path.join(__dirname, row.image_path);
+        fs.unlink(full, () => {});
+      }
+      res.json({ deleted: this.changes > 0 });
+    });
   });
 });
 

@@ -1372,7 +1372,7 @@
       <li><a href="#temoignages">Témoignages</a></li>
       <li><a href="#faq">FAQ</a></li>
       <li><a href="#espace-membre">Espace membre</a></li>
-      <li><a href="#messagerie">Messagerie</a></li>
+      <li><a href="messages.html" target="_blank">Messagerie</a></li>
       <li><a href="#contact" class="nav-cta">Contact</a></li>
       <li id="nav-admin-item" style="display:none;"><a href="#admin-panel">Admin</a></li>
     </ul>
@@ -1487,20 +1487,48 @@
       <form id="admin-sortie-form">
         <div class="form-grid">
           <div class="form-group">
+            <label class="form-label" for="admin-sortie-categorie"><span>*</span> Catégorie</label>
+            <select class="form-input" id="admin-sortie-categorie" name="categorie" required>
+              <option value="">— Choisir une catégorie —</option>
+              <option value="Cinéma">🎬 Cinéma</option>
+              <option value="Musée">🖼️ Musée</option>
+              <option value="Théâtre">🎭 Théâtre</option>
+              <option value="Zoo">🐾 Zoo</option>
+              <option value="Balade douce">🚶‍♀️ Balade</option>
+              <option value="Marché gourmand">🧺 Marché gourmand</option>
+              <option value="Atelier créatif">🎨 Atelier créatif</option>
+              <option value="Repas convivial">🍲 Repas convivial</option>
+              <option value="Concert/Chorale">🎶 Concert/Chorale</option>
+              <option value="Guinguette/Danse">💃 Guinguette/Danse</option>
+              <option value="Laser game">🎯 Laser game</option>
+              <option value="Jardin botanique">🌿 Jardin botanique</option>
+              <option value="Sortie insolite">🧭 Sortie insolite</option>
+            </select>
+          </div>
+          <div class="form-group">
             <label class="form-label" for="admin-sortie-titre"><span>*</span> Titre</label>
-            <input class="form-input" type="text" id="admin-sortie-titre" name="titre" required>
+            <input class="form-input" type="text" id="admin-sortie-titre" name="titre" required placeholder='Ex: Soirée "Les Choristes" au cinéma'>
+            <small class="form-help">Nom visible sur la carte de la sortie.</small>
           </div>
           <div class="form-group">
             <label class="form-label" for="admin-sortie-date">Date</label>
-            <input class="form-input" type="date" id="admin-sortie-date" name="date_iso">
+            <input class="form-input" type="date" id="admin-sortie-date" name="date_iso" placeholder="jj/mm/aaaa">
+            <small class="form-help">Optionnel. Laissez vide si la date est à confirmer.</small>
           </div>
           <div class="form-group">
             <label class="form-label" for="admin-sortie-lieu">Lieu</label>
-            <input class="form-input" type="text" id="admin-sortie-lieu" name="lieu">
+            <input class="form-input" type="text" id="admin-sortie-lieu" name="lieu" placeholder="Ex: Café des Arts — Montauban">
+            <small class="form-help">Ex: Théâtre Olympe de Gouges — Montauban</small>
           </div>
           <div class="form-group full">
             <label class="form-label" for="admin-sortie-description">Description</label>
-            <textarea class="form-textarea" id="admin-sortie-description" name="description"></textarea>
+            <textarea class="form-textarea" id="admin-sortie-description" name="description" placeholder="Ex: Séance adaptée (fauteuils confort, accès facile), boisson chaude offerte après la séance."></textarea>
+            <small class="form-help">Ajoutez les infos utiles: accessibilité, rythme, petites attentions, etc.</small>
+          </div>
+          <div class="form-group full">
+            <label class="form-label" for="admin-sortie-image">Image (optionnelle)</label>
+            <input class="form-input" type="file" id="admin-sortie-image" name="image" accept="image/*">
+            <small class="form-help">JPEG/PNG/WEBP, taille conseillée ≤ 3 Mo.</small>
           </div>
         </div>
         <div class="form-row-bottom">
@@ -2247,21 +2275,27 @@
     list.innerHTML = rows.map(s => {
       const id = s.id ? String(s.id) : '';
       const safeTitre = s.titre ? String(s.titre) : '';
-      const safeLieu = s.lieu ? String(s.lieu) : 'Sortie';
+      const cat = s.categorie ? String(s.categorie) : '';
+      const catLabel = cat ? (categoryEmoji(cat) + ' ' + cat) : 'Sortie';
       const safeDate = s.date_iso ? String(s.date_iso) : '';
       const safeDesc = s.description ? String(s.description) : '';
+      const safeLieu = s.lieu ? String(s.lieu) : '';
+      const img = s.image_path ? String(s.image_path) : '';
+      const thumbStyle = img
+        ? `background: url('${img}') center/cover no-repeat;`
+        : `background: linear-gradient(135deg,#E8D5B0,#C9A96E);`;
       return `
         <div class="activity-card reveal">
-          <div class="card-thumb" style="background: linear-gradient(135deg,#E8D5B0,#C9A96E);">
+          <div class="card-thumb" style="${thumbStyle}">
             <div class="thumb-bg"></div>
-            <span style="position:relative;z-index:1">📅</span>
+            <span style="position:relative;z-index:1">${cat ? categoryEmoji(cat) : '📅'}</span>
           </div>
           <div class="card-body">
-            <div class="card-cat">${safeLieu}</div>
+            <div class="card-cat">${catLabel}</div>
             <h3 class="card-title">${safeTitre}</h3>
             <p class="card-desc">${safeDesc}</p>
             <div class="card-meta">
-              <span>${safeDate}</span>
+              <span>${safeDate}</span>${safeLieu ? '<span> • ' + safeLieu + '</span>' : ''}
             </div>
             <div style="margin-top:1rem;">
               <a href="#espace-membre" class="btn-primary sortie-reserver" data-id="${id}" data-titre="${encodeURIComponent(safeTitre)}">Réserver</a>
@@ -2300,6 +2334,24 @@
   }
   fetchAndRenderSorties();
 
+  function categoryEmoji(c) {
+    const k = String(c || '').toLowerCase();
+    if (k.includes('cinéma') || k.includes('cinema')) return '🎬';
+    if (k.includes('musée') || k.includes('musee')) return '🖼️';
+    if (k.includes('théâtre') || k.includes('theatre')) return '🎭';
+    if (k.includes('zoo')) return '🐾';
+    if (k.includes('balade') || k.includes('promenade')) return '🚶‍♀️';
+    if (k.includes('marché') || k.includes('marche')) return '🧺';
+    if (k.includes('atelier')) return '🎨';
+    if (k.includes('repas') || k.includes('déjeuner') || k.includes('diner') || k.includes('dîner')) return '🍲';
+    if (k.includes('concert') || k.includes('chorale')) return '🎶';
+    if (k.includes('guinguette') || k.includes('danse')) return '💃';
+    if (k.includes('laser')) return '🎯';
+    if (k.includes('jardin')) return '🌿';
+    if (k.includes('insolite')) return '🧭';
+    return '📌';
+  }
+
   function renderAdminSorties(rows) {
     const wrap = document.getElementById('admin-sorties-list');
     if (!wrap) return;
@@ -2312,11 +2364,14 @@
       const titre = s.titre ? String(s.titre) : '';
       const date = s.date_iso ? String(s.date_iso) : '';
       const lieu = s.lieu ? String(s.lieu) : '';
+      const cat = s.categorie ? String(s.categorie) : '';
+      const catLabel = cat ? (categoryEmoji(cat) + ' ' + cat) : '';
+      const img = s.image_path ? String(s.image_path) : '';
       return `
         <div class="admin-sortie-item">
           <div class="admin-sortie-main">
-            <div>${titre}</div>
-            <div class="admin-sortie-meta">${date}${lieu ? ' • ' + lieu : ''}</div>
+            <div>${img ? '🖼️ ' : ''}${titre}</div>
+            <div class="admin-sortie-meta">${catLabel}${catLabel && (date || lieu) ? ' • ' : ''}${date}${lieu ? ' • ' + lieu : ''}</div>
           </div>
           <div class="admin-sortie-actions">
             <button type="button" class="admin-delete-btn" data-id="${id}">Supprimer</button>
@@ -2355,31 +2410,52 @@
       if (!authToken) return;
       if (adminSortiesNote) adminSortiesNote.textContent = '';
       const formData = new FormData(adminSortieForm);
+      const categorie = String(formData.get('categorie') || '').trim();
       const titre = String(formData.get('titre') || '').trim();
       const date_iso = String(formData.get('date_iso') || '').trim();
       const lieu = String(formData.get('lieu') || '').trim();
       const description = String(formData.get('description') || '').trim();
+      const fileInput = document.getElementById('admin-sortie-image');
+      const file = fileInput && fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+      if (!categorie) {
+        if (adminSortiesNote) adminSortiesNote.textContent = 'Merci de choisir une catégorie.';
+        return;
+      }
       if (!titre) {
         if (adminSortiesNote) adminSortiesNote.textContent = 'Merci d’indiquer un titre.';
         return;
       }
-      fetch(API_BASE + '/admin/api/sorties', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer ' + authToken
-        },
-        body: JSON.stringify({ titre, date_iso, lieu, description })
-      })
-        .then(r => r.ok ? r.json() : Promise.reject())
-        .then(() => {
-          adminSortieForm.reset();
-          if (adminSortiesNote) adminSortiesNote.textContent = 'Sortie créée.';
-          fetchAndRenderSorties();
+      function sendPayload(image_base64) {
+        fetch(API_BASE + '/admin/api/sorties', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer ' + authToken
+          },
+          body: JSON.stringify({ titre, date_iso, lieu, description, categorie, image_base64 })
         })
-        .catch(() => {
-          if (adminSortiesNote) adminSortiesNote.textContent = 'Erreur lors de la création de la sortie.';
-        });
+          .then(r => r.ok ? r.json() : Promise.reject())
+          .then(() => {
+            adminSortieForm.reset();
+            if (adminSortiesNote) adminSortiesNote.textContent = 'Sortie créée.';
+            fetchAndRenderSorties();
+          })
+          .catch(() => {
+            if (adminSortiesNote) adminSortiesNote.textContent = 'Erreur lors de la création de la sortie.';
+          });
+      }
+      if (file) {
+        if (file.size > 5 * 1024 * 1024) {
+          if (adminSortiesNote) adminSortiesNote.textContent = 'Image trop lourde (max 5 Mo).';
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => sendPayload(String(reader.result || ''));
+        reader.onerror = () => sendPayload(null);
+        reader.readAsDataURL(file);
+      } else {
+        sendPayload(null);
+      }
     });
   }
 
