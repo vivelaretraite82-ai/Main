@@ -237,8 +237,14 @@ app.post('/contact', (req, res) => {
   stmt.finalize();
 });
 
+function isAdminEmail(emailRaw) {
+  if (!emailRaw) return false;
+  const adminEmail = (process.env.ADMIN_EMAIL || 'vivelaretraite82@gmail.com').trim().toLowerCase();
+  return String(emailRaw).trim().toLowerCase() === adminEmail;
+}
+
 function signToken(user) {
-  const payload = { uid: user.id, email: user.email };
+  const payload = { uid: user.id, email: user.email, isAdmin: isAdminEmail(user.email) };
   const secret = process.env.JWT_SECRET || 'dev-secret';
   return jwt.sign(payload, secret, { expiresIn: '15d' });
 }
@@ -257,6 +263,13 @@ function auth(req, res, next) {
   }
 }
 
+function requireAdmin(req, res, next) {
+  if (!req.user || !isAdminEmail(req.user.email)) {
+    return res.status(403).json({ error: 'admin_only' });
+  }
+  next();
+}
+
 app.post('/auth/signup', (req, res) => {
   const { email, password, prenom, nom, telephone } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'email_password_required' });
@@ -266,7 +279,7 @@ app.post('/auth/signup', (req, res) => {
     if (err) return res.status(400).json({ error: 'email_exists' });
     const user = { id: this.lastID, email };
     const token = signToken(user);
-    res.json({ token, user: { id: user.id, email, prenom, nom, telephone } });
+    res.json({ token, user: { id: user.id, email, prenom, nom, telephone, isAdmin: isAdminEmail(email) } });
   });
   stmt.finalize();
 });
@@ -279,14 +292,14 @@ app.post('/auth/login', (req, res) => {
     const ok = bcrypt.compareSync(password, row.password_hash);
     if (!ok) return res.status(401).json({ error: 'invalid_credentials' });
     const token = signToken(row);
-    res.json({ token, user: { id: row.id, email: row.email, prenom: row.prenom, nom: row.nom, telephone: row.telephone } });
+    res.json({ token, user: { id: row.id, email: row.email, prenom: row.prenom, nom: row.nom, telephone: row.telephone, isAdmin: isAdminEmail(row.email) } });
   });
 });
 
 app.get('/me', auth, (req, res) => {
   db.get('SELECT id, email, prenom, nom, telephone, created_at FROM users WHERE id = ?', [req.user.uid], (err, row) => {
     if (err || !row) return res.status(404).json({ error: 'not_found' });
-    res.json(row);
+    res.json({ ...row, isAdmin: isAdminEmail(row.email) });
   });
 });
 
@@ -366,6 +379,51 @@ app.get('/api/sorties', (req, res) => {
   db.all('SELECT id, titre, description, date_iso, lieu, created_at FROM sorties ORDER BY date_iso ASC, created_at DESC', (err, rows) => {
     if (err) return res.status(500).json({ error: 'db_error' });
     res.json(rows);
+  });
+});
+
+app.get('/admin/reservations', auth, requireAdmin, (req, res) => {
+  const q = `
+    SELECT r.id, r.created_at, u.email, u.prenom, u.nom, u.telephone,
+           s.titre, s.date_iso, s.lieu
+    FROM reservations r
+    JOIN users u ON u.id = r.user_id
+    JOIN sorties s ON s.id = r.sortie_id
+    ORDER BY r.created_at DESC
+    LIMIT 200
+  `;
+  db.all(q, [], (err, rows) => {
+    if (err) return res.status(500).json({ error: 'db_error' });
+    res.json(rows);
+  });
+});
+
+app.post('/admin/api/sorties', auth, requireAdmin, (req, res) => {
+  const { titre, description, date_iso, lieu } = req.body || {};
+  if (!titre || !String(titre).trim()) return res.status(400).json({ error: 'titre_required' });
+  const stmt = db.prepare(`
+    INSERT INTO sorties (titre, description, date_iso, lieu)
+    VALUES (?, ?, ?, ?)
+  `);
+  stmt.run(
+    String(titre).trim(),
+    description ? String(description).trim() : null,
+    date_iso ? String(date_iso).trim() : null,
+    lieu ? String(lieu).trim() : null,
+    function(err) {
+      if (err) return res.status(500).json({ error: 'db_error' });
+      res.json({ id: this.lastID });
+    }
+  );
+  stmt.finalize();
+});
+
+app.delete('/admin/sorties/:id', auth, requireAdmin, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (!id) return res.status(400).json({ error: 'invalid_id' });
+  db.run('DELETE FROM sorties WHERE id = ?', [id], function(err) {
+    if (err) return res.status(500).json({ error: 'db_error' });
+    res.json({ deleted: this.changes > 0 });
   });
 });
 

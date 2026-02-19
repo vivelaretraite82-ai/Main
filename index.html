@@ -1123,6 +1123,70 @@
     color: var(--text-light);
   }
 
+  .admin-layout {
+    display: grid;
+    grid-template-columns: 2fr 2fr;
+    gap: 2.5rem;
+    align-items: flex-start;
+  }
+  .admin-box {
+    background: var(--card-bg);
+    border-radius: 18px;
+    padding: 1.8rem 2rem;
+    box-shadow: 0 18px 45px rgba(25,48,35,0.18);
+  }
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    font-size: .86rem;
+  }
+  .admin-table th,
+  .admin-table td {
+    padding: .5rem .6rem;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+  .admin-table th {
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-light);
+  }
+  .admin-sortie-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .8rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: .9rem;
+  }
+  .admin-sortie-main {
+    display: flex;
+    flex-direction: column;
+  }
+  .admin-sortie-meta {
+    font-size: .78rem;
+    color: var(--text-light);
+  }
+  .admin-sortie-actions {
+    display: flex;
+    gap: .6rem;
+    align-items: center;
+  }
+  .admin-delete-btn {
+    border: 1px solid #B3261E;
+    color: #B3261E;
+    background: transparent;
+    padding: .4rem .7rem;
+    border-radius: 999px;
+    font-size: .78rem;
+    cursor: pointer;
+  }
+  .admin-delete-btn:hover {
+    background: rgba(179,38,30,0.1);
+  }
+
   /* ── FOOTER ── */
   footer {
     background: #1E2820;
@@ -1242,6 +1306,7 @@
       <li><a href="#faq">FAQ</a></li>
       <li><a href="#espace-membre">Espace membre</a></li>
       <li><a href="#contact" class="nav-cta">Contact</a></li>
+      <li id="nav-admin-item" style="display:none;"><a href="#admin-panel">Admin</a></li>
     </ul>
     <button type="button" id="nav-login" class="nav-cta" style="background:transparent;color:var(--text);border:1px solid var(--border);">Connexion</button>
     <button type="button" id="nav-logout" class="nav-cta" style="display:none;background:transparent;color:var(--text);border:1px solid var(--border);">Déconnexion</button>
@@ -1303,6 +1368,58 @@
           <span>actifs cette année</span>
         </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<section id="admin-panel" style="display:none;">
+  <div class="section-tag">Espace administrateur</div>
+  <h2 class="section-title">Gestion des réservations et des sorties</h2>
+  <div class="admin-layout">
+    <div class="admin-box">
+      <h3>Réservations récentes</h3>
+      <div id="admin-reservations-empty" class="section-sub">Aucune réservation trouvée pour le moment.</div>
+      <table class="admin-table" id="admin-reservations-table" style="display:none;">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Membre</th>
+            <th>Sortie</th>
+            <th>Contact</th>
+          </tr>
+        </thead>
+        <tbody id="admin-reservations-body"></tbody>
+      </table>
+    </div>
+    <div class="admin-box">
+      <h3>Sorties à l’affiche</h3>
+      <div id="admin-sorties-list"></div>
+      <h4>Créer une nouvelle sortie</h4>
+      <form id="admin-sortie-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="admin-sortie-titre"><span>*</span> Titre</label>
+            <input class="form-input" type="text" id="admin-sortie-titre" name="titre" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="admin-sortie-date">Date</label>
+            <input class="form-input" type="date" id="admin-sortie-date" name="date_iso">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="admin-sortie-lieu">Lieu</label>
+            <input class="form-input" type="text" id="admin-sortie-lieu" name="lieu">
+          </div>
+          <div class="form-group full">
+            <label class="form-label" for="admin-sortie-description">Description</label>
+            <textarea class="form-textarea" id="admin-sortie-description" name="description"></textarea>
+          </div>
+        </div>
+        <div class="form-row-bottom">
+          <small>Les sorties créées ici apparaissent dans la section Sorties du site.</small>
+          <button type="submit" class="btn-primary">Créer la sortie</button>
+        </div>
+      </form>
+      <div id="admin-sorties-note" class="member-status"></div>
     </div>
   </div>
 </section>
@@ -1408,7 +1525,6 @@
   </div>
   <div id="sorties-list" class="activities-grid"></div>
   <div id="sorties-empty" class="section-sub" style="display:none;">Aucune sortie publiée pour le moment.</div>
-  <div style="margin-top:1.2rem;" class="section-sub">Administration: ajouter des sorties sur <a href="https://backend-uhg3.onrender.com/admin" style="color:var(--sage-dark);text-decoration:underline;">l’espace admin</a>.</div>
   </section>
 
 <!-- COMMENT ÇA MARCHE -->
@@ -1819,6 +1935,7 @@
 <script>
   const API_BASE = 'https://backend-uhg3.onrender.com';
   let authToken = window.localStorage.getItem('vivelaretraite-token') || '';
+  let currentUser = null;
 
   const reveals = document.querySelectorAll('.reveal');
   const observer = new IntersectionObserver((entries) => {
@@ -1978,10 +2095,128 @@
     });
   }
 
-  fetch(API_BASE + '/api/sorties')
-    .then(r => r.ok ? r.json() : [])
-    .then(rows => renderSorties(rows))
-    .catch(() => {});
+  function fetchAndRenderSorties() {
+    fetch(API_BASE + '/api/sorties')
+      .then(r => r.ok ? r.json() : [])
+      .then(rows => {
+        renderSorties(rows);
+        renderAdminSorties(rows);
+      })
+      .catch(() => {});
+  }
+  fetchAndRenderSorties();
+
+  function renderAdminSorties(rows) {
+    const wrap = document.getElementById('admin-sorties-list');
+    if (!wrap) return;
+    if (!Array.isArray(rows) || rows.length === 0) {
+      wrap.innerHTML = '<div class="section-sub">Aucune sortie enregistrée.</div>';
+      return;
+    }
+    wrap.innerHTML = rows.map(s => {
+      const id = s.id ? String(s.id) : '';
+      const titre = s.titre ? String(s.titre) : '';
+      const date = s.date_iso ? String(s.date_iso) : '';
+      const lieu = s.lieu ? String(s.lieu) : '';
+      return `
+        <div class="admin-sortie-item">
+          <div class="admin-sortie-main">
+            <div>${titre}</div>
+            <div class="admin-sortie-meta">${date}${lieu ? ' • ' + lieu : ''}</div>
+          </div>
+          <div class="admin-sortie-actions">
+            <button type="button" class="admin-delete-btn" data-id="${id}">Supprimer</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+    wrap.querySelectorAll('.admin-delete-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        if (!id || !authToken) return;
+        fetch(API_BASE + '/admin/sorties/' + encodeURIComponent(id), {
+          method: 'DELETE',
+          headers: { Authorization: 'Bearer ' + authToken }
+        })
+          .then(r => r.ok ? r.json() : Promise.reject())
+          .then(() => {
+            fetchAndRenderSorties();
+          })
+          .catch(() => {});
+      });
+    });
+  }
+
+  const adminSortieForm = document.getElementById('admin-sortie-form');
+  const adminSortiesNote = document.getElementById('admin-sorties-note');
+  if (adminSortieForm) {
+    adminSortieForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!authToken) return;
+      if (adminSortiesNote) adminSortiesNote.textContent = '';
+      const formData = new FormData(adminSortieForm);
+      const titre = String(formData.get('titre') || '').trim();
+      const date_iso = String(formData.get('date_iso') || '').trim();
+      const lieu = String(formData.get('lieu') || '').trim();
+      const description = String(formData.get('description') || '').trim();
+      if (!titre) {
+        if (adminSortiesNote) adminSortiesNote.textContent = 'Merci d’indiquer un titre.';
+        return;
+      }
+      fetch(API_BASE + '/admin/api/sorties', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + authToken
+        },
+        body: JSON.stringify({ titre, date_iso, lieu, description })
+      })
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(() => {
+          adminSortieForm.reset();
+          if (adminSortiesNote) adminSortiesNote.textContent = 'Sortie créée.';
+          fetchAndRenderSorties();
+        })
+        .catch(() => {
+          if (adminSortiesNote) adminSortiesNote.textContent = 'Erreur lors de la création de la sortie.';
+        });
+    });
+  }
+
+  function loadAdminReservations() {
+    const tbody = document.getElementById('admin-reservations-body');
+    const empty = document.getElementById('admin-reservations-empty');
+    const table = document.getElementById('admin-reservations-table');
+    if (!tbody || !authToken) return;
+    fetch(API_BASE + '/admin/reservations', {
+      headers: { Authorization: 'Bearer ' + authToken }
+    })
+      .then(r => r.ok ? r.json() : [])
+      .then(rows => {
+        if (!Array.isArray(rows) || rows.length === 0) {
+          if (empty) empty.style.display = 'block';
+          if (table) table.style.display = 'none';
+          return;
+        }
+        if (empty) empty.style.display = 'none';
+        if (table) table.style.display = 'table';
+        tbody.innerHTML = rows.map(r => {
+          const date = r.created_at ? String(r.created_at).slice(0, 10) : '';
+          const nom = [r.prenom, r.nom].filter(Boolean).join(' ') || r.email || '';
+          const sortie = r.titre ? String(r.titre) : '';
+          const contact = r.telephone || r.email || '';
+          return `
+            <tr>
+              <td>${date}</td>
+              <td>${nom}</td>
+              <td>${sortie}</td>
+              <td>${contact}</td>
+            </tr>
+          `;
+        }).join('');
+      })
+      .catch(() => {});
+  }
 
   const inscriptionModal = document.getElementById('inscription-modal');
   const openInscriptionBtn = document.getElementById('open-inscription');
@@ -2097,12 +2332,24 @@
 
   const navLoginBtn = document.getElementById('nav-login');
   const navLogoutBtn = document.getElementById('nav-logout');
+  const navAdminItem = document.getElementById('nav-admin-item');
+  const adminPanel = document.getElementById('admin-panel');
   function updateNavAuth() {
     const hasToken = !!authToken;
     if (navLoginBtn) navLoginBtn.style.display = hasToken ? 'none' : 'inline-block';
     const openInscr = document.getElementById('open-inscription');
     if (openInscr) openInscr.style.display = hasToken ? 'none' : 'inline-block';
     if (navLogoutBtn) navLogoutBtn.style.display = hasToken ? 'inline-block' : 'none';
+    const isAdmin = currentUser && currentUser.isAdmin;
+    if (navAdminItem) navAdminItem.style.display = isAdmin ? 'inline-block' : 'none';
+    if (adminPanel) adminPanel.style.display = isAdmin ? 'block' : 'none';
+  }
+  if (navAdminItem) {
+    navAdminItem.addEventListener('click', () => {
+      if (currentUser && currentUser.isAdmin) {
+        loadAdminReservations();
+      }
+    });
   }
   const loginModal = document.getElementById('login-modal');
   const closeLoginBtn = document.getElementById('close-login');
@@ -2154,6 +2401,7 @@
           if (ok && data && data.token && data.user) {
             authToken = data.token;
             window.localStorage.setItem('vivelaretraite-token', authToken);
+            currentUser = data.user;
             const userEmail = data.user.email || email;
             setMemberStatus('Connecté(e) en tant que ' + userEmail + '.');
             loadReservations();
@@ -2175,6 +2423,7 @@
     navLogoutBtn.addEventListener('click', () => {
       authToken = '';
       window.localStorage.removeItem('vivelaretraite-token');
+      currentUser = null;
       setMemberStatus('Vous êtes déconnecté(e).');
       renderReservations([]);
       updateNavAuth();
@@ -2204,6 +2453,7 @@
           if (ok && data && data.token && data.user) {
             authToken = data.token;
             window.localStorage.setItem('vivelaretraite-token', authToken);
+            currentUser = data.user;
             const userEmail = data.user.email || email;
             setMemberStatus('Connecté(e) en tant que ' + userEmail + '.');
             loadReservations();
@@ -2228,6 +2478,7 @@
       .then(r => r.ok ? r.json() : null)
       .then(user => {
         if (user && user.email) {
+          currentUser = user;
           setMemberStatus('Connecté(e) en tant que ' + user.email + '.');
           loadReservations();
           if (typeof updateNavAuth === 'function') updateNavAuth();
