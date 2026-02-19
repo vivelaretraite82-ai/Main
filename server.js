@@ -118,8 +118,8 @@ if (USE_PG) {
       )
     `);
 
-    db.run(\`ALTER TABLE sorties ADD COLUMN categorie TEXT\`, () => {});
-    db.run(\`ALTER TABLE sorties ADD COLUMN image_path TEXT\`, () => {});
+    db.run('ALTER TABLE sorties ADD COLUMN categorie TEXT', () => {});
+    db.run('ALTER TABLE sorties ADD COLUMN image_path TEXT', () => {});
 
     db.run(`
       CREATE TABLE IF NOT EXISTS users (
