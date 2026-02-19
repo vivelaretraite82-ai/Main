@@ -31,6 +31,16 @@ function normalizePgSql(sql) {
   return q;
 }
 
+function toPgQuery(sql, params) {
+  const values = Array.isArray(params) ? params : [];
+  if (!values.length) {
+    return { text: normalizePgSql(sql), values: [] };
+  }
+  let index = 0;
+  const text = normalizePgSql(sql).replace(/\?/g, () => '$' + (++index));
+  return { text, values };
+}
+
 if (USE_PG) {
   pgPool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -39,24 +49,24 @@ if (USE_PG) {
   db = {
     all(sql, params, cb) {
       if (typeof params === 'function') { cb = params; params = []; }
-      sql = normalizePgSql(sql);
-      pgPool.query(sql, params || [])
+      const { text, values } = toPgQuery(sql, params || []);
+      pgPool.query(text, values)
         .then(r => cb && cb(null, r.rows))
         .catch(e => cb && cb(e));
     },
     get(sql, params, cb) {
       if (typeof params === 'function') { cb = params; params = []; }
-      sql = normalizePgSql(sql);
-      pgPool.query(sql, params || [])
+      const { text, values } = toPgQuery(sql, params || []);
+      pgPool.query(text, values)
         .then(r => cb && cb(null, r.rows[0] || null))
         .catch(e => cb && cb(e));
     },
     run(sql, params, cb) {
       if (typeof params === 'function') { cb = params; params = []; }
-      let query = normalizePgSql(sql);
-      const needsReturning = /^\s*insert/i.test(query) && !/\breturning\b/i.test(query);
-      if (needsReturning) query += ' RETURNING id';
-      pgPool.query(query, params || [])
+      let { text, values } = toPgQuery(sql, params || []);
+      const needsReturning = /^\s*insert/i.test(text) && !/\breturning\b/i.test(text);
+      if (needsReturning) text += ' RETURNING id';
+      pgPool.query(text, values)
         .then(r => {
           const ctx = { lastID: needsReturning && r.rows[0] ? r.rows[0].id : undefined, changes: r.rowCount };
           cb && cb.call(ctx, null);
@@ -69,10 +79,10 @@ if (USE_PG) {
           const args = Array.from(arguments);
           const cb = typeof args[args.length - 1] === 'function' ? args.pop() : null;
           const params = args;
-          let query = normalizePgSql(sql);
-          const needsReturning = /^\s*insert/i.test(query) && !/\breturning\b/i.test(query);
-          if (needsReturning) query += ' RETURNING id';
-          pgPool.query(query, params)
+          let { text, values } = toPgQuery(sql, params);
+          const needsReturning = /^\s*insert/i.test(text) && !/\breturning\b/i.test(text);
+          if (needsReturning) text += ' RETURNING id';
+          pgPool.query(text, values)
             .then(r => {
               const ctx = { lastID: needsReturning && r.rows[0] ? r.rows[0].id : undefined, changes: r.rowCount };
               cb && cb.call(ctx, null);
