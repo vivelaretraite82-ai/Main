@@ -1243,6 +1243,8 @@
       <li><a href="#espace-membre">Espace membre</a></li>
       <li><a href="#contact" class="nav-cta">Contact</a></li>
     </ul>
+    <button type="button" id="nav-login" class="nav-cta" style="background:transparent;color:var(--text);border:1px solid var(--border);">Connexion</button>
+    <button type="button" id="nav-logout" class="nav-cta" style="display:none;background:transparent;color:var(--text);border:1px solid var(--border);">Déconnexion</button>
     <button type="button" id="open-inscription" class="nav-cta" style="background:var(--gold);color:#111;">Inscription</button>
     <button type="button" class="theme-toggle" aria-label="Changer de thème">
       <span class="theme-toggle-icon">🌙</span>
@@ -1537,6 +1539,34 @@
     </div>
   </div>
  </section>
+
+<section id="login-modal" class="modal" aria-hidden="true">
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="login-title">
+    <div class="modal-header">
+      <h3 id="login-title" class="section-title" style="margin:0;">Connexion</h3>
+      <button type="button" class="modal-close" id="close-login" aria-label="Fermer">Fermer</button>
+    </div>
+    <div class="form-card" style="margin:0;">
+      <form id="login-modal-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="login-modal-email"><span>*</span> Email</label>
+            <input class="form-input" type="email" id="login-modal-email" name="email" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="login-modal-password"><span>*</span> Mot de passe</label>
+            <input class="form-input" type="password" id="login-modal-password" name="password" required>
+          </div>
+        </div>
+        <div class="form-row-bottom">
+          <small>Mot de passe oublié ? Alexandra peut vous aider par téléphone.</small>
+          <button type="submit" class="btn-primary">Me connecter</button>
+        </div>
+      </form>
+      <div class="form-note" id="login-modal-note"></div>
+    </div>
+  </div>
+</section>
 
 <!-- TÉMOIGNAGES -->
 <section id="temoignages">
@@ -2061,8 +2091,93 @@
   if (inscriptionGoLogin) {
     inscriptionGoLogin.addEventListener('click', () => {
       closeInscription();
-      const section = document.getElementById('espace-membre');
-      if (section) section.scrollIntoView({ behavior: 'smooth' });
+      openLogin();
+    });
+  }
+
+  const navLoginBtn = document.getElementById('nav-login');
+  const navLogoutBtn = document.getElementById('nav-logout');
+  function updateNavAuth() {
+    const hasToken = !!authToken;
+    if (navLoginBtn) navLoginBtn.style.display = hasToken ? 'none' : 'inline-block';
+    const openInscr = document.getElementById('open-inscription');
+    if (openInscr) openInscr.style.display = hasToken ? 'none' : 'inline-block';
+    if (navLogoutBtn) navLogoutBtn.style.display = hasToken ? 'inline-block' : 'none';
+  }
+  const loginModal = document.getElementById('login-modal');
+  const closeLoginBtn = document.getElementById('close-login');
+  function openLogin() {
+    if (!loginModal) return;
+    loginModal.classList.add('open');
+    loginModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    const emailField = document.getElementById('login-modal-email');
+    if (emailField) setTimeout(() => emailField.focus(), 50);
+  }
+  function closeLogin() {
+    if (!loginModal) return;
+    loginModal.classList.remove('open');
+    loginModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+  if (navLoginBtn) navLoginBtn.addEventListener('click', openLogin);
+  if (closeLoginBtn) closeLoginBtn.addEventListener('click', closeLogin);
+  if (loginModal) {
+    loginModal.addEventListener('click', (e) => {
+      if (e.target === loginModal) closeLogin();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && loginModal.classList.contains('open')) closeLogin();
+    });
+  }
+
+  const loginModalForm = document.getElementById('login-modal-form');
+  const loginModalNote = document.getElementById('login-modal-note');
+  if (loginModalForm) {
+    loginModalForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (loginModalNote) loginModalNote.textContent = '';
+      const formData = new FormData(loginModalForm);
+      const email = String(formData.get('email') || '').trim();
+      const password = String(formData.get('password') || '');
+      if (!email || !password) {
+        if (loginModalNote) loginModalNote.textContent = 'Merci de renseigner votre email et votre mot de passe.';
+        return;
+      }
+      fetch(API_BASE + '/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
+        .then(r => r.json().then(data => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+          if (ok && data && data.token && data.user) {
+            authToken = data.token;
+            window.localStorage.setItem('vivelaretraite-token', authToken);
+            const userEmail = data.user.email || email;
+            setMemberStatus('Connecté(e) en tant que ' + userEmail + '.');
+            loadReservations();
+            updateNavAuth();
+            closeLogin();
+          } else {
+            const code = data && data.error;
+            let msg = 'Impossible de vous connecter.';
+            if (code === 'invalid_credentials') msg = 'Email ou mot de passe incorrect.';
+            if (loginModalNote) loginModalNote.textContent = msg;
+          }
+        })
+        .catch(() => {
+          if (loginModalNote) loginModalNote.textContent = 'Erreur réseau. Merci de réessayer.';
+        });
+    });
+  }
+  if (navLogoutBtn) {
+    navLogoutBtn.addEventListener('click', () => {
+      authToken = '';
+      window.localStorage.removeItem('vivelaretraite-token');
+      setMemberStatus('Vous êtes déconnecté(e).');
+      renderReservations([]);
+      updateNavAuth();
     });
   }
 
@@ -2092,6 +2207,7 @@
             const userEmail = data.user.email || email;
             setMemberStatus('Connecté(e) en tant que ' + userEmail + '.');
             loadReservations();
+            if (typeof updateNavAuth === 'function') updateNavAuth();
           } else {
             const code = data && data.error;
             let msg = 'Impossible de vous connecter.';
@@ -2114,15 +2230,18 @@
         if (user && user.email) {
           setMemberStatus('Connecté(e) en tant que ' + user.email + '.');
           loadReservations();
+          if (typeof updateNavAuth === 'function') updateNavAuth();
         } else {
           authToken = '';
           window.localStorage.removeItem('vivelaretraite-token');
           renderReservations([]);
+          if (typeof updateNavAuth === 'function') updateNavAuth();
         }
       })
       .catch(() => {});
   } else {
     renderReservations([]);
+    if (typeof updateNavAuth === 'function') updateNavAuth();
   }
 
   const themeToggle = document.querySelector('.theme-toggle');
