@@ -85,6 +85,24 @@ db.serialize(() => {
   `);
 });
 
+function ensureAdminUser() {
+  const email = (process.env.ADMIN_EMAIL || 'vivelaretraite82@gmail.com').trim().toLowerCase();
+  const password = process.env.ADMIN_PASSWORD || 'luanamax?';
+  const hash = bcrypt.hashSync(password, 10);
+  const prenom = 'Alexandra';
+  const telephone = '0667095143';
+  db.run(
+    `
+    INSERT INTO users (email, password_hash, prenom, nom, telephone)
+    VALUES (?, ?, ?, ?, ?)
+    ON CONFLICT(email) DO UPDATE SET password_hash = excluded.password_hash
+    `,
+    [email, hash, prenom, null, telephone]
+  );
+}
+
+ensureAdminUser();
+
 app.use(cors({
   origin: ['http://localhost:3000', 'https://vivelaretraite82-ai.github.io'],
   methods: ['GET', 'POST'],
@@ -110,7 +128,7 @@ function getTransporter() {
 }
 
 app.post('/inscription', (req, res) => {
-  const { prenom, nom, email, telephone, ville, naissance } = req.body;
+  const { prenom, nom, email, telephone, ville, naissance, password } = req.body;
   let preferences = req.body.preferences || '';
 
   if (Array.isArray(preferences)) {
@@ -138,6 +156,28 @@ app.post('/inscription', (req, res) => {
       if (err) {
         console.error('Erreur lors de l’enregistrement inscription:', err);
         return res.status(500).send('Une erreur est survenue, merci de réessayer plus tard.');
+      }
+      if (email && password) {
+        const normalizedEmail = email.trim().toLowerCase();
+        const hash = bcrypt.hashSync(String(password), 10);
+        db.run(
+          `
+          INSERT INTO users (email, password_hash, prenom, nom, telephone)
+          VALUES (?, ?, ?, ?, ?)
+          ON CONFLICT(email) DO UPDATE SET
+            password_hash = excluded.password_hash,
+            prenom = COALESCE(excluded.prenom, users.prenom),
+            nom = COALESCE(excluded.nom, users.nom),
+            telephone = COALESCE(excluded.telephone, users.telephone)
+          `,
+          [
+            normalizedEmail,
+            hash,
+            prenom ? prenom.trim() : null,
+            nom ? nom.trim() : null,
+            telephone ? telephone.trim() : null
+          ]
+        );
       }
       const transporter = getTransporter();
       if (transporter) {

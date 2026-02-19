@@ -47,6 +47,11 @@
   body[data-theme="dark"] .card-meta {
     color: #111111;
   }
+  body[data-theme="dark"] .card-title,
+  body[data-theme="dark"] .card-desc,
+  body[data-theme="dark"] .card-cat {
+    color: #111111;
+  }
 
   body[data-theme="dark"] .card-title { font-weight: 600; }
   body[data-theme="dark"] .card-desc { font-weight: 600; }
@@ -1303,7 +1308,7 @@
 <!-- STATS -->
 <div class="stats">
   <div class="stat-item reveal">
-    <div class="stat-num">21+</div>
+    <div class="stat-num">+10</div>
     <div class="stat-label">Types d'activités</div>
   </div>
   <div class="stat-item reveal">
@@ -1465,7 +1470,7 @@
     </div>
     <div class="form-card" style="margin:0;">
       <h3>Formulaire d’inscription</h3>
-      <p>Remplissez ce formulaire, Alexandra vous recontacte rapidement.</p>
+      <p>Remplissez ce formulaire pour être rappelé(e) et créer vos accès à l’espace membre.</p>
       <form action="https://backend-uhg3.onrender.com/inscription" method="post">
         <div class="form-grid">
           <div class="form-group">
@@ -1479,6 +1484,10 @@
           <div class="form-group">
             <label class="form-label" for="email"><span>*</span> Email</label>
             <input class="form-input" type="email" id="email" name="email" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="inscription-password"><span>*</span> Mot de passe (espace membre)</label>
+            <input class="form-input" type="password" id="inscription-password" name="password" required>
           </div>
           <div class="form-group">
             <label class="form-label" for="telephone">Téléphone</label>
@@ -1499,7 +1508,10 @@
         </div>
         <div class="form-row-bottom">
           <small>Les informations restent confidentielles et ne sont jamais partagées.</small>
-          <button type="submit" class="btn-primary">Valider mon inscription</button>
+          <div style="display:flex;gap:.6rem;">
+            <button type="button" class="btn-outline" id="inscription-go-login">Connexion</button>
+            <button type="submit" class="btn-primary">Valider mon inscription</button>
+          </div>
         </div>
       </form>
     </div>
@@ -2042,6 +2054,15 @@
     });
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && callModal.classList.contains('open')) closeCall();
+    });
+  }
+
+  const inscriptionGoLogin = document.getElementById('inscription-go-login');
+  if (inscriptionGoLogin) {
+    inscriptionGoLogin.addEventListener('click', () => {
+      closeInscription();
+      const section = document.getElementById('espace-membre');
+      if (section) section.scrollIntoView({ behavior: 'smooth' });
     });
   }
 
