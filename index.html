@@ -397,6 +397,44 @@
     max-width: 500px;
   }
 
+  .member-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 2rem;
+    align-items: flex-start;
+  }
+
+  .member-status {
+    margin-top: 1rem;
+    font-size: .85rem;
+    color: var(--text-light);
+  }
+
+  .member-reservations {
+    margin-top: 1.2rem;
+    font-size: .85rem;
+  }
+
+  .member-reservations h4 {
+    font-size: .9rem;
+    margin-bottom: .6rem;
+  }
+
+  .reservation-item {
+    border-top: 1px solid var(--border);
+    padding: .6rem 0;
+  }
+
+  .reservation-item-title {
+    font-weight: 500;
+    font-size: .86rem;
+  }
+
+  .reservation-item-meta {
+    font-size: .78rem;
+    color: var(--text-light);
+  }
+
   /* ── ACTIVITÉS ── */
   #activites { background: var(--cream); }
 
@@ -1070,6 +1108,7 @@
       <li><a href="#temoignages">Témoignages</a></li>
       <li><a href="#faq">FAQ</a></li>
       <li><a href="#inscription">Inscription</a></li>
+      <li><a href="#espace-membre">Espace membre</a></li>
       <li><a href="#contact" class="nav-cta">Contact</a></li>
     </ul>
     <button type="button" class="theme-toggle" aria-label="Changer de thème">
@@ -1486,6 +1525,80 @@
   </div>
 </section>
 
+<section id="espace-membre">
+  <div class="activities-header reveal" style="align-items:flex-start;">
+    <div>
+      <div class="section-tag">Espace membre</div>
+      <h2 class="section-title">Gérer <em>mes sorties</em></h2>
+      <p class="section-sub">Créez votre espace membre pour réserver des sorties en ligne et retrouver en un coup d’œil les activités auxquelles vous êtes inscrit(e).</p>
+    </div>
+    <div class="section-sub">
+      Alexandra reste disponible par téléphone à chaque étape. L’espace membre simplifie simplement le suivi de vos sorties et de celles de vos proches.
+    </div>
+  </div>
+  <div class="member-grid">
+    <div class="form-card reveal">
+      <h3>Créer mon compte</h3>
+      <p>Un email et un mot de passe suffisent pour créer votre accès personnel.</p>
+      <form id="signup-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="signup-email"><span>*</span> Email</label>
+            <input class="form-input" type="email" id="signup-email" name="email" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="signup-password"><span>*</span> Mot de passe</label>
+            <input class="form-input" type="password" id="signup-password" name="password" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="signup-password-confirm"><span>*</span> Confirmation</label>
+            <input class="form-input" type="password" id="signup-password-confirm" name="password_confirm" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="signup-prenom">Prénom</label>
+            <input class="form-input" type="text" id="signup-prenom" name="prenom">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="signup-nom">Nom</label>
+            <input class="form-input" type="text" id="signup-nom" name="nom">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="signup-telephone">Téléphone</label>
+            <input class="form-input" type="tel" id="signup-telephone" name="telephone">
+          </div>
+        </div>
+        <div class="form-row-bottom">
+          <small>Vous pourrez supprimer votre compte sur simple demande.</small>
+          <button type="submit" class="btn-primary">Créer mon compte</button>
+        </div>
+      </form>
+      <div class="form-note" id="signup-note"></div>
+    </div>
+    <div class="form-card reveal">
+      <h3>Connexion et suivi</h3>
+      <p>Connectez-vous pour voir les sorties réservées en ligne.</p>
+      <form id="login-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="login-email"><span>*</span> Email</label>
+            <input class="form-input" type="email" id="login-email" name="email" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="login-password"><span>*</span> Mot de passe</label>
+            <input class="form-input" type="password" id="login-password" name="password" required>
+          </div>
+        </div>
+        <div class="form-row-bottom">
+          <small>Mot de passe oublié ? Alexandra peut vous aider par téléphone.</small>
+          <button type="submit" class="btn-primary">Me connecter</button>
+        </div>
+      </form>
+      <div class="member-status" id="member-status"></div>
+      <div class="member-reservations" id="member-reservations"></div>
+    </div>
+  </div>
+</section>
+
 <!-- CTA / CONTACT -->
 <section class="cta-section" id="contact">
   <div>
@@ -1560,7 +1673,7 @@
       <li><a href="tel:+33667095143">06 67 09 51 43</a></li>
       <li><a href="mailto:vivelaretraite82@gmail.com">vivelaretraite82@gmail.com</a></li>
       <li><a href="#">Trouver une agence</a></li>
-      <li><a href="#">Espace membre</a></li>
+      <li><a href="#espace-membre">Espace membre</a></li>
     </ul>
   </div>
 </footer>
@@ -1570,6 +1683,9 @@
 </div>
 
 <script>
+  const API_BASE = 'https://backend-uhg3.onrender.com';
+  let authToken = window.localStorage.getItem('vivelaretraite-token') || '';
+
   const reveals = document.querySelectorAll('.reveal');
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry, i) => {
@@ -1611,6 +1727,71 @@
     }
   }
 
+  function setMemberStatus(text) {
+    const el = document.getElementById('member-status');
+    if (el) el.textContent = text || '';
+  }
+
+  function renderReservations(rows) {
+    const wrap = document.getElementById('member-reservations');
+    if (!wrap) return;
+    if (!authToken) {
+      wrap.textContent = 'Connectez-vous pour voir vos sorties réservées.';
+      return;
+    }
+    if (!Array.isArray(rows) || rows.length === 0) {
+      wrap.textContent = 'Aucune sortie réservée pour le moment.';
+      return;
+    }
+    wrap.innerHTML = '<h4>Mes sorties réservées</h4>' + rows.map(r => {
+      const titre = r.titre ? String(r.titre) : '';
+      const date = r.date_iso ? String(r.date_iso) : '';
+      const lieu = r.lieu ? String(r.lieu) : '';
+      return `
+        <div class="reservation-item">
+          <div class="reservation-item-title">${titre}</div>
+          <div class="reservation-item-meta">${date}${lieu ? ' • ' + lieu : ''}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function loadReservations() {
+    if (!authToken) {
+      renderReservations([]);
+      return;
+    }
+    fetch(API_BASE + '/me/reservations', {
+      headers: { Authorization: 'Bearer ' + authToken }
+    })
+      .then(r => r.ok ? r.json() : [])
+      .then(rows => renderReservations(rows))
+      .catch(() => {});
+  }
+
+  function reserveSortie(id, titre) {
+    if (!authToken) return;
+    fetch(API_BASE + '/sorties/' + encodeURIComponent(id) + '/reserver', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + authToken
+      }
+    })
+      .then(r => r.json().then(data => ({ ok: r.ok, data })))
+      .then(({ ok }) => {
+        if (ok) {
+          setMemberStatus('Votre réservation pour "' + titre + '" est enregistrée.');
+          loadReservations();
+        } else {
+          setMemberStatus('Impossible d’enregistrer la réservation. Merci de réessayer.');
+        }
+      })
+      .catch(() => {
+        setMemberStatus('Impossible d’enregistrer la réservation. Merci de réessayer.');
+      });
+  }
+
   function renderSorties(rows) {
     const list = document.getElementById('sorties-list');
     const empty = document.getElementById('sorties-empty');
@@ -1619,6 +1800,7 @@
       return;
     }
     list.innerHTML = rows.map(s => {
+      const id = s.id ? String(s.id) : '';
       const safeTitre = s.titre ? String(s.titre) : '';
       const safeLieu = s.lieu ? String(s.lieu) : 'Sortie';
       const safeDate = s.date_iso ? String(s.date_iso) : '';
@@ -1637,7 +1819,7 @@
               <span>${safeDate}</span>
             </div>
             <div style="margin-top:1rem;">
-              <a href="#inscription" class="btn-primary sortie-reserver" data-titre="${encodeURIComponent(safeTitre)}">Réserver</a>
+              <a href="#espace-membre" class="btn-primary sortie-reserver" data-id="${id}" data-titre="${encodeURIComponent(safeTitre)}">Réserver</a>
             </div>
           </div>
         </div>
@@ -1645,17 +1827,138 @@
     }).join('');
     list.querySelectorAll('.sortie-reserver').forEach(a => {
       a.addEventListener('click', (e) => {
+        e.preventDefault();
+        const id = e.currentTarget.getAttribute('data-id');
         const titre = decodeURIComponent(e.currentTarget.getAttribute('data-titre') || '');
-        const pref = document.getElementById('preferences');
-        if (pref) pref.value = `Sortie : ${titre}`;
+        if (!id) return;
+        if (!authToken) {
+          const section = document.getElementById('espace-membre');
+          if (section) section.scrollIntoView({ behavior: 'smooth' });
+          setMemberStatus('Créez un compte ou connectez-vous pour réserver "' + titre + '".');
+          const pref = document.getElementById('preferences');
+          if (pref && titre) pref.value = `Sortie : ${titre}`;
+          return;
+        }
+        reserveSortie(id, titre);
       });
     });
   }
 
-  fetch('https://backend-uhg3.onrender.com/api/sorties')
+  fetch(API_BASE + '/api/sorties')
     .then(r => r.ok ? r.json() : [])
     .then(rows => renderSorties(rows))
     .catch(() => {});
+
+  const signupForm = document.getElementById('signup-form');
+  const signupNote = document.getElementById('signup-note');
+  const loginForm = document.getElementById('login-form');
+
+  if (signupForm) {
+    signupForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (signupNote) signupNote.textContent = '';
+      const formData = new FormData(signupForm);
+      const email = String(formData.get('email') || '').trim();
+      const password = String(formData.get('password') || '');
+      const confirm = String(formData.get('password_confirm') || '');
+      if (!email || !password) {
+        if (signupNote) signupNote.textContent = 'Merci de renseigner votre email et un mot de passe.';
+        return;
+      }
+      if (password !== confirm) {
+        if (signupNote) signupNote.textContent = 'Les mots de passe ne correspondent pas.';
+        return;
+      }
+      const payload = {
+        email,
+        password,
+        prenom: String(formData.get('prenom') || ''),
+        nom: String(formData.get('nom') || ''),
+        telephone: String(formData.get('telephone') || '')
+      };
+      fetch(API_BASE + '/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+        .then(r => r.json().then(data => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+          if (ok && data && data.token && data.user) {
+            authToken = data.token;
+            window.localStorage.setItem('vivelaretraite-token', authToken);
+            const userEmail = data.user.email || email;
+            setMemberStatus('Connecté(e) en tant que ' + userEmail + '.');
+            if (signupNote) signupNote.textContent = 'Compte créé avec succès.';
+            loadReservations();
+          } else {
+            const code = data && data.error;
+            let msg = 'Impossible de créer le compte.';
+            if (code === 'email_exists') msg = 'Un compte existe déjà avec cet email.';
+            if (signupNote) signupNote.textContent = msg;
+          }
+        })
+        .catch(() => {
+          if (signupNote) signupNote.textContent = 'Erreur réseau. Merci de réessayer.';
+        });
+    });
+  }
+
+  if (loginForm) {
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      setMemberStatus('');
+      const formData = new FormData(loginForm);
+      const email = String(formData.get('email') || '').trim();
+      const password = String(formData.get('password') || '');
+      if (!email || !password) {
+        setMemberStatus('Merci de renseigner votre email et votre mot de passe.');
+        return;
+      }
+      fetch(API_BASE + '/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
+        .then(r => r.json().then(data => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+          if (ok && data && data.token && data.user) {
+            authToken = data.token;
+            window.localStorage.setItem('vivelaretraite-token', authToken);
+            const userEmail = data.user.email || email;
+            setMemberStatus('Connecté(e) en tant que ' + userEmail + '.');
+            loadReservations();
+          } else {
+            const code = data && data.error;
+            let msg = 'Impossible de vous connecter.';
+            if (code === 'invalid_credentials') msg = 'Email ou mot de passe incorrect.';
+            setMemberStatus(msg);
+          }
+        })
+        .catch(() => {
+          setMemberStatus('Erreur réseau. Merci de réessayer.');
+        });
+    });
+  }
+
+  if (authToken) {
+    fetch(API_BASE + '/me', {
+      headers: { Authorization: 'Bearer ' + authToken }
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(user => {
+        if (user && user.email) {
+          setMemberStatus('Connecté(e) en tant que ' + user.email + '.');
+          loadReservations();
+        } else {
+          authToken = '';
+          window.localStorage.removeItem('vivelaretraite-token');
+          renderReservations([]);
+        }
+      })
+      .catch(() => {});
+  } else {
+    renderReservations([]);
+  }
 
   const themeToggle = document.querySelector('.theme-toggle');
   const themeIcon = document.querySelector('.theme-toggle-icon');
