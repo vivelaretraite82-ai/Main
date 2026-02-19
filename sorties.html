@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sorties à venir — Vive la Retraite</title>
+  <link rel="icon" href="logo.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="logo.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sage: #7A9E7E;
+      --sage-light: #B8D4BB;
+      --sage-dark: #4A6E4E;
+      --cream: #FAF7F2;
+      --warm-white: #F5F0E8;
+      --text: #2C2C2C;
+      --text-light: #6B6B6B;
+      --gold: #C9A96E;
+      --gold-light: #E8D5B0;
+      --border: #E0D8CC;
+    }
+    body[data-theme="dark"] {
+      --cream: #101411;
+      --warm-white: #141A16;
+      --sage: #98C2A0;
+      --sage-light: #45594B;
+      --sage-dark: #B7E0BC;
+      --gold: #D8C48A;
+      --gold-light: #4B4330;
+      --border: #283128;
+      --text: #F3F3F1;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Jost', sans-serif;
+      font-weight: 300;
+      background: var(--cream);
+      color: var(--text);
+      overflow-x: hidden;
+      font-size: 18px;
+    }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.4rem 4rem;
+      background: rgba(15,18,16,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.6rem;
+      font-weight: 400;
+      color: var(--sage-dark);
+      letter-spacing: .04em;
+    }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 1.8rem;
+    }
+    .nav-links {
+      display: flex;
+      list-style: none;
+      gap: 1.8rem;
+      font-size: .95rem;
+    }
+    .nav-links a {
+      position: relative;
+      color: #F7F7F4;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      font-size: .78rem;
+    }
+    .nav-links a::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -.35rem;
+      width: 0;
+      height: 1px;
+      background: var(--gold);
+      transition: width .25s ease;
+    }
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+    .nav-cta {
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--gold);
+      color: #111;
+      padding: .55rem 1.4rem;
+      font-size: .8rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    main {
+      padding: 7rem 4rem 4rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .section-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: .75rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--text-light);
+      margin-bottom: .6rem;
+    }
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.5rem;
+      line-height: 1.1;
+      margin-bottom: .5rem;
+    }
+    .section-title em {
+      color: var(--gold);
+      font-style: italic;
+    }
+    .section-sub {
+      font-size: .98rem;
+      color: var(--text-light);
+      max-width: 640px;
+      margin-bottom: 2rem;
+    }
+    .activities-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill,minmax(260px,1fr));
+      gap: 1.8rem;
+      margin-top: 1.5rem;
+    }
+    .activity-card {
+      background: var(--warm-white);
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid rgba(0,0,0,0.03);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+    }
+    .card-thumb {
+      position: relative;
+      height: 170px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 2.4rem;
+    }
+    .thumb-bg {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 10% 0%, rgba(255,255,255,0.11), transparent 55%);
+      opacity: .7;
+    }
+    .card-body {
+      padding: 1.3rem 1.4rem 1.5rem;
+    }
+    .card-cat {
+      font-size: .8rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--text-light);
+      margin-bottom: .3rem;
+    }
+    .card-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      margin-bottom: .4rem;
+    }
+    .card-desc {
+      font-size: .95rem;
+      color: var(--text-light);
+      margin-bottom: .6rem;
+    }
+    .card-meta {
+      font-size: .86rem;
+      color: var(--text-light);
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: .55rem 1.35rem;
+      border-radius: 999px;
+      border: none;
+      background: var(--sage);
+      color: #fff;
+      font-size: .86rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .btn-primary:hover {
+      background: var(--sage-dark);
+    }
+    #sorties-empty {
+      margin-top: 1.5rem;
+    }
+    @media (max-width: 800px) {
+      nav {
+        padding: 1rem 1.4rem;
+      }
+      main {
+        padding: 6rem 1.4rem 3rem;
+      }
+      .nav-right {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body data-theme="dark">
+  <nav>
+    <div class="nav-logo">Vive la Retraite</div>
+    <div class="nav-right">
+      <ul class="nav-links">
+        <li><a href="index.html#accueil">Accueil</a></li>
+        <li><a href="sorties.html">Sorties</a></li>
+        <li><a href="index.html#comment">Comment ça marche</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+      </ul>
+      <a href="index.html#espace-membre" class="nav-cta">Espace membre</a>
+    </div>
+  </nav>
+  <main>
+    <div>
+      <div class="section-tag">Annonces</div>
+      <h1 class="section-title">Sorties à <em>venir</em></h1>
+      <p class="section-sub">
+        Retrouvez ici toutes les sorties publiées par Alexandra. Choisissez celles qui vous plaisent et inscrivez-vous en quelques clics.
+      </p>
+    </div>
+    <div id="sorties-list" class="activities-grid"></div>
+    <div id="sorties-empty" class="section-sub" style="display:none;">Aucune sortie publiée pour le moment.</div>
+  </main>
+  <script>
+    const API_BASE = 'https://backend-uhg3.onrender.com';
+    function categoryEmoji(c) {
+      const k = String(c || '').toLowerCase();
+      if (k.includes('cinéma') || k.includes('cinema')) return '🎬';
+      if (k.includes('musée') || k.includes('musee')) return '🖼️';
+      if (k.includes('théâtre') || k.includes('theatre')) return '🎭';
+      if (k.includes('zoo')) return '🐾';
+      if (k.includes('balade') || k.includes('promenade')) return '🚶‍♀️';
+      if (k.includes('marché') || k.includes('marche')) return '🧺';
+      if (k.includes('atelier')) return '🎨';
+      if (k.includes('repas') || k.includes('déjeuner') || k.includes('diner') || k.includes('dîner')) return '🍲';
+      if (k.includes('concert') || k.includes('chorale')) return '🎶';
+      return '📅';
+    }
+    function renderSorties(rows) {
+      const list = document.getElementById('sorties-list');
+      const empty = document.getElementById('sorties-empty');
+      if (!Array.isArray(rows) || rows.length === 0) {
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      list.innerHTML = rows.map(s => {
+        const id = s.id ? String(s.id) : '';
+        const titre = s.titre ? String(s.titre) : '';
+        const cat = s.categorie ? String(s.categorie) : '';
+        const catLabel = cat ? (categoryEmoji(cat) + ' ' + cat) : 'Sortie';
+        const dateIso = s.date_iso ? String(s.date_iso) : '';
+        const desc = s.description ? String(s.description) : '';
+        const lieu = s.lieu ? String(s.lieu) : '';
+        const img = s.image_path ? String(s.image_path) : '';
+        const thumbStyle = img
+          ? "background: url('" + img + "') center/cover no-repeat;"
+          : "background: linear-gradient(135deg,#E8D5B0,#C9A96E);";
+        return (
+          '<div class="activity-card">' +
+            '<div class="card-thumb" style="' + thumbStyle + '">' +
+              '<div class="thumb-bg"></div>' +
+              '<span style="position:relative;z-index:1">' + (cat ? categoryEmoji(cat) : '📅') + '</span>' +
+            '</div>' +
+            '<div class="card-body">' +
+              '<div class="card-cat">' + catLabel + '</div>' +
+              '<h2 class="card-title">' + titre + '</h2>' +
+              '<p class="card-desc">' + desc + '</p>' +
+              '<div class="card-meta">' +
+                '<span>' + dateIso + '</span>' +
+                (lieu ? '<span>• ' + lieu + '</span>' : '') +
+              '</div>' +
+              '<a class="btn-primary" href="index.html#espace-membre" data-id="' + id + '">S\'inscrire</a>' +
+            '</div>' +
+          '</div>'
+        );
+      }).join('');
+    }
+    function fetchSorties() {
+      fetch(API_BASE + '/api/sorties')
+        .then(r => r.ok ? r.json() : [])
+        .then(rows => renderSorties(rows))
+        .catch(() => {
+          const empty = document.getElementById('sorties-empty');
+          empty.style.display = 'block';
+          empty.textContent = 'Impossible de charger les sorties pour le moment. Merci de réessayer plus tard.';
+        });
+    }
+    fetchSorties();
+  </script>
+</body>
+</html>
+
