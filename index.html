@@ -1071,6 +1071,14 @@
     margin-bottom: 1rem;
     font-size: 1.4rem;
   }
+  .footer-logo-img {
+    height: 44px;
+    width: auto;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,.15);
+    display: inline-block;
+    margin: .3rem 0 1rem;
+  }
 
   .footer-brand p {
     font-size: .82rem;
@@ -1164,11 +1172,10 @@
       <li><a href="#comment">Comment ça marche</a></li>
       <li><a href="#temoignages">Témoignages</a></li>
       <li><a href="#faq">FAQ</a></li>
-      <li><a href="#inscription">Inscription</a></li>
       <li><a href="#espace-membre">Espace membre</a></li>
       <li><a href="#contact" class="nav-cta">Contact</a></li>
     </ul>
-    <img class="nav-corner-logo" src="haut%20du%20site.jpg" alt="Logo" loading="lazy">
+    <button type="button" id="open-inscription" class="nav-cta" style="background:var(--gold);color:#111;">Inscription</button>
     <button type="button" class="theme-toggle" aria-label="Changer de thème">
       <span class="theme-toggle-icon">🌙</span>
       <span class="theme-toggle-label">Sombre</span>
@@ -1232,7 +1239,7 @@
 
 <!-- VISUEL DE MARQUE -->
 <section class="brand-placement reveal" style="text-align:center; padding: 4rem;">
-  <img src="a%20placer.jpg" alt="Vive la Retraite" style="max-width: 680px; width: 100%; height: auto; border-radius: 6px; border:1px solid var(--border); box-shadow: 0 20px 45px rgba(0,0,0,.08);" loading="lazy">
+  <img src="a%20placer.jpg" alt="Vive la Retraite" style="max-width: 220px; width: 100%; height: auto; border-radius: 6px; border:1px solid var(--border); box-shadow: 0 20px 45px rgba(0,0,0,.08);" loading="lazy">
 </section>
 
 <!-- STATS -->
@@ -1396,58 +1403,56 @@
   </div>
 </section>
 
-<!-- INSCRIPTION -->
-<section id="inscription">
-  <div class="activities-header reveal" style="align-items:flex-start;">
-    <div>
-      <div class="section-tag">Inscription</div>
-      <h2 class="section-title">Rejoindre <em>Vive la Retraite</em></h2>
-      <p class="section-sub">Quelques informations suffisent pour que nous puissions vous proposer des sorties parfaitement adaptées à votre rythme, vos envies et votre mobilité.</p>
+<!-- INSCRIPTION (MODAL) -->
+<section id="inscription-modal" class="modal" aria-hidden="true">
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="inscription-title">
+    <div class="modal-header">
+      <h3 id="inscription-title" class="section-title" style="margin:0;">Rejoindre <em>Vive la Retraite</em></h3>
+      <button type="button" class="modal-close" id="close-inscription" aria-label="Fermer">Fermer</button>
     </div>
-    <div class="section-sub">
-      Alexandra prend le temps d’appeler chaque nouvelle personne pour faire connaissance, répondre aux questions et rassurer les proches. L’inscription est gratuite et sans engagement.
+    <div class="section-sub" style="margin-bottom:1rem;">
+      Quelques informations suffisent pour vous rappeler et vous proposer des sorties adaptées à votre rythme, vos envies et votre mobilité.
     </div>
-  </div>
-
-  <div class="form-card reveal">
-    <h3>Formulaire d’inscription</h3>
-    <p>Remplissez ce formulaire pour être rappelé(e) par Alexandra et recevoir le programme des prochaines sorties.</p>
-    <form action="https://backend-uhg3.onrender.com/inscription" method="post">
-      <div class="form-grid">
-        <div class="form-group">
-          <label class="form-label" for="prenom"><span>*</span> Prénom</label>
-          <input class="form-input" type="text" id="prenom" name="prenom" required>
+    <div class="form-card" style="margin:0;">
+      <h3>Formulaire d’inscription</h3>
+      <p>Remplissez ce formulaire, Alexandra vous recontacte rapidement.</p>
+      <form action="https://backend-uhg3.onrender.com/inscription" method="post">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="prenom"><span>*</span> Prénom</label>
+            <input class="form-input" type="text" id="prenom" name="prenom" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="nom"><span>*</span> Nom</label>
+            <input class="form-input" type="text" id="nom" name="nom" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="email"><span>*</span> Email</label>
+            <input class="form-input" type="email" id="email" name="email" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="telephone">Téléphone</label>
+            <input class="form-input" type="tel" id="telephone" name="telephone" placeholder="06 67 09 51 43">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ville">Ville</label>
+            <input class="form-input" type="text" id="ville" name="ville">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="naissance">Année de naissance</label>
+            <input class="form-input" type="number" id="naissance" name="naissance" min="1925" max="2010" placeholder="1947">
+          </div>
+          <div class="form-group full">
+            <label class="form-label" for="preferences">Types de sorties préférées</label>
+            <textarea class="form-textarea" id="preferences" name="preferences" placeholder="Exemples : théâtre, promenade douce, restaurant, jeux de société…"></textarea>
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label" for="nom"><span>*</span> Nom</label>
-          <input class="form-input" type="text" id="nom" name="nom" required>
+        <div class="form-row-bottom">
+          <small>Les informations restent confidentielles et ne sont jamais partagées.</small>
+          <button type="submit" class="btn-primary">Valider mon inscription</button>
         </div>
-        <div class="form-group">
-          <label class="form-label" for="email"><span>*</span> Email</label>
-          <input class="form-input" type="email" id="email" name="email" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="telephone">Téléphone</label>
-          <input class="form-input" type="tel" id="telephone" name="telephone" placeholder="06 67 09 51 43">
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="ville">Ville</label>
-          <input class="form-input" type="text" id="ville" name="ville">
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="naissance">Année de naissance</label>
-          <input class="form-input" type="number" id="naissance" name="naissance" min="1925" max="2010" placeholder="1947">
-        </div>
-        <div class="form-group full">
-          <label class="form-label" for="preferences">Types de sorties préférées</label>
-          <textarea class="form-textarea" id="preferences" name="preferences" placeholder="Exemples : théâtre, promenade douce, restaurant, jeux de société…"></textarea>
-        </div>
-      </div>
-      <div class="form-row-bottom">
-        <small>Les informations restent confidentielles et ne sont jamais partagées.</small>
-        <button type="submit" class="btn-primary">Valider mon inscription</button>
-      </div>
-    </form>
+      </form>
+    </div>
   </div>
 </section>
 
@@ -1708,6 +1713,7 @@
 <footer>
   <div class="footer-brand">
     <span class="nav-logo">Vive la Retraite</span>
+    <img src="haut%20du%20site.jpg" alt="Logo Vive la Retraite" class="footer-logo-img" loading="lazy">
     <p>Des sorties chaleureuses, sécurisées et humaines, imaginées par Alexandra pour que chaque senior puisse continuer à vivre de beaux moments hors de chez soi.</p>
   </div>
   <div class="footer-col">
@@ -1911,6 +1917,32 @@
     .then(r => r.ok ? r.json() : [])
     .then(rows => renderSorties(rows))
     .catch(() => {});
+
+  const inscriptionModal = document.getElementById('inscription-modal');
+  const openInscriptionBtn = document.getElementById('open-inscription');
+  const closeInscriptionBtn = document.getElementById('close-inscription');
+  function openInscription() {
+    if (!inscriptionModal) return;
+    inscriptionModal.classList.add('open');
+    inscriptionModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeInscription() {
+    if (!inscriptionModal) return;
+    inscriptionModal.classList.remove('open');
+    inscriptionModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+  if (openInscriptionBtn) openInscriptionBtn.addEventListener('click', openInscription);
+  if (closeInscriptionBtn) closeInscriptionBtn.addEventListener('click', closeInscription);
+  if (inscriptionModal) {
+    inscriptionModal.addEventListener('click', (e) => {
+      if (e.target === inscriptionModal) closeInscription();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && inscriptionModal.classList.contains('open')) closeInscription();
+    });
+  }
 
   const signupForm = document.getElementById('signup-form');
   const signupNote = document.getElementById('signup-note');
