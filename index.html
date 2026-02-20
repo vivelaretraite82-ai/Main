@@ -106,8 +106,8 @@
     margin-left: .35rem;
     padding: .05rem .36rem;
     border-radius: 999px;
-    background: var(--gold);
-    color: #111;
+    background: #e53935;
+    color: #fff;
     font-size: .55rem;
     line-height: 1.1;
     vertical-align: middle;
@@ -1477,7 +1477,7 @@
       <li><a href="#temoignages">Témoignages</a></li>
       <li><a href="#faq">FAQ</a></li>
       <li><a href="#espace-membre">Espace membre</a></li>
-      <li><a href="messages.html" target="_blank">Messagerie<span id="nav-messages-badge" class="nav-badge" style="display:none;">●</span></a></li>
+      <li><a href="messages.html" id="nav-messages-link" target="_blank">Messagerie<span id="nav-messages-badge" class="nav-badge" style="display:none;">●</span></a></li>
       <li><a href="#contact" class="nav-cta">Contact</a></li>
       <li id="nav-admin-item" style="display:none;"><a href="#admin-panel">Admin</a></li>
     </ul>
@@ -1504,7 +1504,7 @@
       <li><a href="#temoignages">Témoignages</a></li>
       <li><a href="#faq">FAQ</a></li>
       <li><a href="#espace-membre">Espace membre</a></li>
-      <li><a href="messages.html" target="_blank">Messagerie<span id="nav-messages-badge-mobile" class="nav-badge" style="display:none;">●</span></a></li>
+      <li><a href="messages.html" id="nav-messages-link-mobile" target="_blank">Messagerie<span id="nav-messages-badge-mobile" class="nav-badge" style="display:none;">●</span></a></li>
       <li><a href="#contact">Contact</a></li>
       <li id="nav-admin-item-mobile" style="display:none;"><a href="#admin-panel">Admin</a></li>
     </ul>
@@ -2898,6 +2898,19 @@
       a.addEventListener('click', () => {
         closeNavDrawer();
       });
+    });
+  }
+
+  const navMessagesLink = document.getElementById('nav-messages-link');
+  const navMessagesLinkMobile = document.getElementById('nav-messages-link-mobile');
+  if (navMessagesLink) {
+    navMessagesLink.addEventListener('click', () => {
+      setNavMessagesBadge(false);
+    });
+  }
+  if (navMessagesLinkMobile) {
+    navMessagesLinkMobile.addEventListener('click', () => {
+      setNavMessagesBadge(false);
     });
   }
 
