@@ -217,6 +217,83 @@
     margin-bottom: .4rem;
   }
 
+  .nav-menu-toggle {
+    display: none;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 1.3rem;
+    cursor: pointer;
+    margin-right: 1rem;
+  }
+
+  .nav-drawer {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    display: none;
+    z-index: 1800;
+  }
+
+  .nav-drawer.open {
+    display: block;
+  }
+
+  .nav-drawer-panel {
+    width: 260px;
+    max-width: 80vw;
+    height: 100%;
+    background: var(--warm-white);
+    box-shadow: 12px 0 40px rgba(0,0,0,.25);
+    padding: 1.5rem 1.25rem;
+    transform: translateX(-100%);
+    transition: transform .25s ease-out;
+  }
+
+  .nav-drawer.open .nav-drawer-panel {
+    transform: translateX(0);
+  }
+
+  .nav-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+
+  .nav-drawer-title {
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    font-size: .8rem;
+    color: var(--text-light);
+  }
+
+  .nav-drawer-close {
+    border: none;
+    background: transparent;
+    font-size: 1.1rem;
+    cursor: pointer;
+    color: var(--text-light);
+  }
+
+  .nav-drawer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+
+  .nav-drawer-links a {
+    text-decoration: none;
+    color: var(--text);
+    font-size: .9rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+
   .nav-links a {
     text-decoration: none;
     color: var(--text-light);
@@ -1336,7 +1413,10 @@
 
   /* ── RESPONSIVE ── */
   @media (max-width: 1024px) {
-    nav { padding: 1.2rem 2rem; }
+    nav { padding: 1.2rem 1.2rem; }
+    .nav-menu-toggle { display: inline-flex; align-items: center; justify-content: center; }
+    .nav-logo { font-size: .95rem; }
+    .nav-right { margin-left: auto; gap: .4rem; }
     .hero { padding: 8rem 2rem 4rem; grid-template-columns: 1fr; text-align: center; }
     .hero::before { display: none; }
     .hero-visual { display: none; }
@@ -1362,6 +1442,7 @@
 
 <!-- NAV -->
 <nav>
+  <button type="button" id="nav-menu-toggle" class="nav-menu-toggle" aria-label="Ouvrir le menu">☰</button>
   <div class="nav-logo">Vive la Retraite</div>
   <div class="nav-right">
     <ul class="nav-links">
@@ -1384,6 +1465,26 @@
     </button>
   </div>
 </nav>
+
+<div id="nav-drawer" class="nav-drawer" aria-hidden="true">
+  <div class="nav-drawer-panel">
+    <div class="nav-drawer-header">
+      <div class="nav-drawer-title">Menu</div>
+      <button type="button" id="nav-drawer-close" class="nav-drawer-close" aria-label="Fermer le menu">✕</button>
+    </div>
+    <ul class="nav-drawer-links">
+      <li><a href="#activites">Activités</a></li>
+      <li><a href="sorties.html">Sorties</a></li>
+      <li><a href="#comment">Comment ça marche</a></li>
+      <li><a href="#temoignages">Témoignages</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a href="#espace-membre">Espace membre</a></li>
+      <li><a href="messages.html" target="_blank">Messagerie</a></li>
+      <li><a href="#contact">Contact</a></li>
+      <li id="nav-admin-item-mobile" style="display:none;"><a href="#admin-panel">Admin</a></li>
+    </ul>
+  </div>
+</div>
 
 <div id="feedback-banner" class="feedback-banner"></div>
 
@@ -2726,9 +2827,39 @@
     });
   }
 
+  const navMenuToggle = document.getElementById('nav-menu-toggle');
+  const navDrawer = document.getElementById('nav-drawer');
+  const navDrawerClose = document.getElementById('nav-drawer-close');
+  function openNavDrawer() {
+    if (!navDrawer) return;
+    navDrawer.classList.add('open');
+    navDrawer.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeNavDrawer() {
+    if (!navDrawer) return;
+    navDrawer.classList.remove('open');
+    navDrawer.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+  if (navMenuToggle) navMenuToggle.addEventListener('click', openNavDrawer);
+  if (navDrawerClose) navDrawerClose.addEventListener('click', closeNavDrawer);
+  if (navDrawer) {
+    navDrawer.addEventListener('click', (e) => {
+      if (e.target === navDrawer) closeNavDrawer();
+    });
+    const drawerLinks = navDrawer.querySelectorAll('.nav-drawer-links a');
+    drawerLinks.forEach(a => {
+      a.addEventListener('click', () => {
+        closeNavDrawer();
+      });
+    });
+  }
+
   const navLoginBtn = document.getElementById('nav-login');
   const navLogoutBtn = document.getElementById('nav-logout');
   const navAdminItem = document.getElementById('nav-admin-item');
+  const navAdminItemMobile = document.getElementById('nav-admin-item-mobile');
   const adminPanel = document.getElementById('admin-panel');
   function updateNavAuth() {
     const hasToken = !!authToken;
@@ -2738,16 +2869,21 @@
     if (navLogoutBtn) navLogoutBtn.style.display = hasToken ? 'inline-block' : 'none';
     const isAdmin = !!(currentUser && String(currentUser.email || '').trim().toLowerCase() === ADMIN_EMAIL);
     if (navAdminItem) navAdminItem.style.display = isAdmin ? 'inline-block' : 'none';
+    if (navAdminItemMobile) navAdminItemMobile.style.display = isAdmin ? 'list-item' : 'none';
     if (adminPanel) adminPanel.style.display = isAdmin ? 'block' : 'none';
     updateMessagingVisibility();
   }
+  function openAdminPanel() {
+    if (currentUser && String(currentUser.email || '').trim().toLowerCase() === ADMIN_EMAIL) {
+      loadAdminReservations();
+      loadAdminThreads();
+    }
+  }
   if (navAdminItem) {
-    navAdminItem.addEventListener('click', () => {
-      if (currentUser && String(currentUser.email || '').trim().toLowerCase() === ADMIN_EMAIL) {
-        loadAdminReservations();
-        loadAdminThreads();
-      }
-    });
+    navAdminItem.addEventListener('click', openAdminPanel);
+  }
+  if (navAdminItemMobile) {
+    navAdminItemMobile.addEventListener('click', openAdminPanel);
   }
   const loginModal = document.getElementById('login-modal');
   const closeLoginBtn = document.getElementById('close-login');
