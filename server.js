@@ -575,6 +575,58 @@ app.get('/me/reservations', auth, (req, res) => {
   });
 });
 
+app.delete('/me/reservations/:id', auth, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (!id) return res.status(400).json({ error: 'invalid_reservation' });
+  const q = `
+    SELECT r.id, r.user_id, r.sortie_id, r.created_at,
+           s.titre, s.date_iso, s.lieu,
+           u.email, u.prenom, u.nom, u.telephone
+    FROM reservations r
+    JOIN sorties s ON s.id = r.sortie_id
+    JOIN users u ON u.id = r.user_id
+    WHERE r.id = ? AND r.user_id = ?
+  `;
+  db.get(q, [id, req.user.uid], (err, row) => {
+    if (err || !row) {
+      return res.status(404).json({ error: 'not_found' });
+    }
+    db.run('DELETE FROM reservations WHERE id = ? AND user_id = ?', [id, req.user.uid], (delErr) => {
+      if (delErr) {
+        return res.status(500).json({ error: 'db_error' });
+      }
+      const transporter = getTransporter();
+      if (transporter) {
+        const fullName = [row.prenom, row.nom].filter(Boolean).join(' ') || row.email || '';
+        const sortieTitre = row.titre || '';
+        const date = row.date_iso || '';
+        const lieu = row.lieu || '';
+        const createdAt = row.created_at || '';
+        const lines = [
+          'Annulation de réservation Vive la Retraite',
+          '',
+          'Membre : ' + fullName,
+          'Email : ' + (row.email || ''),
+          'Téléphone : ' + (row.telephone || ''),
+          '',
+          'Sortie : ' + sortieTitre,
+          'Date : ' + date,
+          'Lieu : ' + lieu,
+          '',
+          'Réservation initiale créée le : ' + createdAt
+        ];
+        transporter.sendMail({
+          to: 'vivelaretraite82@gmail.com',
+          from: process.env.FROM_EMAIL || 'no-reply@vivelaretraite.local',
+          subject: 'Annulation de réservation',
+          text: lines.join('\n')
+        }, () => {});
+      }
+      res.json({ ok: true });
+    });
+  });
+});
+
 app.post('/sorties/:id/reserver', auth, (req, res) => {
   const sortieId = parseInt(req.params.id, 10);
   if (!sortieId) return res.status(400).json({ error: 'invalid_sortie' });

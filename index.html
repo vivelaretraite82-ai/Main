@@ -623,6 +623,15 @@
     padding: .6rem 0;
   }
 
+  .reservation-item-cancelled .reservation-item-title {
+    text-decoration: line-through;
+    color: var(--text-light);
+  }
+
+  .reservation-item-cancelled .reservation-item-meta {
+    color: var(--text-light);
+  }
+
   .reservation-item-title {
     font-weight: 500;
     font-size: .86rem;
@@ -2255,16 +2264,31 @@
       return;
     }
     wrap.innerHTML = '<h4>Mes sorties réservées</h4>' + rows.map(r => {
+      const id = r.id;
       const titre = r.titre ? String(r.titre) : '';
       const date = r.date_iso ? String(r.date_iso) : '';
       const lieu = r.lieu ? String(r.lieu) : '';
       return `
         <div class="reservation-item">
-          <div class="reservation-item-title">${titre}</div>
-          <div class="reservation-item-meta">${date}${lieu ? ' • ' + lieu : ''}</div>
+          <div>
+            <div class="reservation-item-title">${titre}</div>
+            <div class="reservation-item-meta">${date}${lieu ? ' • ' + lieu : ''}</div>
+          </div>
+          <button class="btn-outline reservation-cancel" data-id="${id}" data-titre="${titre}" style="font-size:.75rem;padding:.3rem .7rem;margin-left:auto;">Annuler</button>
         </div>
       `;
     }).join('');
+    wrap.querySelectorAll('.reservation-cancel').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const id = e.currentTarget.getAttribute('data-id');
+        const titre = e.currentTarget.getAttribute('data-titre') || '';
+        if (!id || !authToken) return;
+        const ok = window.confirm('Annuler la réservation pour "' + titre + '" ?');
+        if (!ok) return;
+        cancelReservation(id, titre);
+      });
+    });
   }
 
   function updateMessagingVisibility() {
@@ -2395,6 +2419,42 @@
       })
       .catch(() => {
         setMemberStatus('Impossible d’enregistrer la réservation. Merci de réessayer.');
+      });
+  }
+
+  function cancelReservation(reservationId, titre) {
+    if (!authToken) return;
+    fetch(API_BASE + '/me/reservations/' + encodeURIComponent(reservationId), {
+      method: 'DELETE',
+      headers: {
+        Authorization: 'Bearer ' + authToken
+      }
+    })
+      .then(r => r.json().then(data => ({ ok: r.ok, data })))
+      .then(({ ok }) => {
+        if (ok) {
+          setMemberStatus('Votre réservation pour "' + titre + '" est annulée.');
+          const wrap = document.getElementById('member-reservations');
+          if (wrap) {
+            const item = wrap.querySelector('.reservation-cancel[data-id="' + reservationId + '"]');
+            if (item) {
+              const container = item.closest('.reservation-item');
+              if (container) {
+                container.classList.add('reservation-item-cancelled');
+                const meta = container.querySelector('.reservation-item-meta');
+                if (meta && !meta.textContent.includes('Annulée')) {
+                  meta.textContent = (meta.textContent ? meta.textContent + ' — ' : '') + 'Annulée';
+                }
+              }
+              item.style.display = 'none';
+            }
+          }
+        } else {
+          setMemberStatus('Impossible d’annuler la réservation. Merci de réessayer.');
+        }
+      })
+      .catch(() => {
+        setMemberStatus('Impossible d’annuler la réservation. Merci de réessayer.');
       });
   }
 
