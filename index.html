@@ -1608,6 +1608,7 @@
             <th>Date</th>
             <th>Membre</th>
             <th>Sortie</th>
+            <th>Statut</th>
             <th>Contact</th>
           </tr>
         </thead>
@@ -2724,11 +2725,14 @@
           const nom = [r.prenom, r.nom].filter(Boolean).join(' ') || r.email || '';
           const sortie = r.titre ? String(r.titre) : '';
           const contact = r.telephone || r.email || '';
+          const rawStatus = String(r.status || 'active');
+          const status = rawStatus === 'cancelled' ? 'Annulée' : 'Active';
           return `
             <tr>
               <td>${date}</td>
               <td>${nom}</td>
               <td>${sortie}</td>
+              <td>${status}</td>
               <td>${contact}</td>
             </tr>
           `;
