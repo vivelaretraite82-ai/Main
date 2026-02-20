@@ -251,6 +251,7 @@ async function ensurePgSchema() {
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       sortie_id INTEGER NOT NULL REFERENCES sorties(id) ON DELETE CASCADE,
       created_at TIMESTAMPTZ DEFAULT NOW(),
+      status TEXT DEFAULT 'active',
       UNIQUE(user_id, sortie_id)
     )`);
   await pgPool.query(`
@@ -269,6 +270,21 @@ async function ensurePgSchema() {
       body TEXT NOT NULL,
       created_at TIMESTAMPTZ DEFAULT NOW()
     )`);
+}
+
+function ensureReservationStatusColumn() {
+  if (USE_PG) {
+    return pgPool.query(`ALTER TABLE reservations ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active'`)
+      .catch(() => {});
+  }
+  return new Promise((resolve) => {
+    db.run(`ALTER TABLE reservations ADD COLUMN status TEXT DEFAULT 'active'`, (err) => {
+      if (err && !(String(err.message || '').toLowerCase().includes('duplicate column'))) {
+        console.error('Erreur ajout colonne status sur reservations:', err);
+      }
+      resolve();
+    });
+  });
 }
 
 async function ensureAdminUserPg() {
@@ -563,7 +579,7 @@ app.get('/me', auth, (req, res) => {
 
 app.get('/me/reservations', auth, (req, res) => {
   const q = `
-    SELECT r.id, r.created_at, s.id AS sortie_id, s.titre, s.date_iso, s.lieu, s.description
+    SELECT r.id, r.created_at, r.status, s.id AS sortie_id, s.titre, s.date_iso, s.lieu, s.description
     FROM reservations r
     JOIN sorties s ON s.id = r.sortie_id
     WHERE r.user_id = ?
@@ -579,7 +595,7 @@ app.delete('/me/reservations/:id', auth, (req, res) => {
   const id = parseInt(req.params.id, 10);
   if (!id) return res.status(400).json({ error: 'invalid_reservation' });
   const q = `
-    SELECT r.id, r.user_id, r.sortie_id, r.created_at,
+    SELECT r.id, r.user_id, r.sortie_id, r.created_at, r.status,
            s.titre, s.date_iso, s.lieu,
            u.email, u.prenom, u.nom, u.telephone
     FROM reservations r
@@ -591,7 +607,7 @@ app.delete('/me/reservations/:id', auth, (req, res) => {
     if (err || !row) {
       return res.status(404).json({ error: 'not_found' });
     }
-    db.run('DELETE FROM reservations WHERE id = ? AND user_id = ?', [id, req.user.uid], (delErr) => {
+    db.run(`UPDATE reservations SET status = 'cancelled' WHERE id = ? AND user_id = ?`, [id, req.user.uid], (delErr) => {
       if (delErr) {
         return res.status(500).json({ error: 'db_error' });
       }
@@ -633,7 +649,7 @@ app.post('/sorties/:id/reserver', auth, (req, res) => {
   const sql = `
     INSERT INTO reservations (user_id, sortie_id)
     VALUES (?, ?)
-    ON CONFLICT (user_id, sortie_id) DO NOTHING
+    ON CONFLICT (user_id, sortie_id) DO UPDATE SET status = 'active'
   `;
   db.run(sql, [req.user.uid, sortieId], (err) => {
     if (err) {
@@ -759,7 +775,7 @@ app.post('/messages', auth, (req, res) => {
 
 app.get('/admin/reservations', auth, requireAdmin, (req, res) => {
   const q = `
-    SELECT r.id, r.created_at, u.email, u.prenom, u.nom, u.telephone,
+    SELECT r.id, r.created_at, r.status, u.email, u.prenom, u.nom, u.telephone,
            s.titre, s.date_iso, s.lieu
     FROM reservations r
     JOIN users u ON u.id = r.user_id

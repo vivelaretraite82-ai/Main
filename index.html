@@ -2038,6 +2038,16 @@
 
       <div class="faq-item">
         <button class="faq-question" onclick="toggleFaq(this)">
+          Combien de personnes participent à chaque sortie ?
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer">
+          <p class="faq-answer-inner">Les sorties se font en petits groupes de 7 personnes maximum pour garder un vrai esprit de groupe. Alexandra vient vous chercher directement à domicile et vous raccompagne en fin de sortie.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
           Puis-je venir accompagné d'un membre de ma famille ?
           <span class="faq-icon">+</span>
         </button>
@@ -2268,13 +2278,17 @@
       const titre = r.titre ? String(r.titre) : '';
       const date = r.date_iso ? String(r.date_iso) : '';
       const lieu = r.lieu ? String(r.lieu) : '';
+      const status = String(r.status || 'active');
+      const cancelled = status === 'cancelled';
+      const metaBase = `${date}${lieu ? ' • ' + lieu : ''}`;
+      const meta = cancelled ? (metaBase ? metaBase + ' — Annulée' : 'Annulée') : metaBase;
       return `
-        <div class="reservation-item">
+        <div class="reservation-item${cancelled ? ' reservation-item-cancelled' : ''}">
           <div>
             <div class="reservation-item-title">${titre}</div>
-            <div class="reservation-item-meta">${date}${lieu ? ' • ' + lieu : ''}</div>
+            <div class="reservation-item-meta">${meta}</div>
           </div>
-          <button class="btn-outline reservation-cancel" data-id="${id}" data-titre="${titre}" style="font-size:.75rem;padding:.3rem .7rem;margin-left:auto;">Annuler</button>
+          ${cancelled ? '' : `<button class="btn-outline reservation-cancel" data-id="${id}" data-titre="${titre}" style="font-size:.75rem;padding:.3rem .7rem;margin-left:auto;">Annuler</button>`}
         </div>
       `;
     }).join('');
