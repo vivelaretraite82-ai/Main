@@ -296,9 +296,10 @@ if (!USE_PG) {
 
 app.use(cors({
   origin: ['http://localhost:3000', 'https://vivelaretraite82-ai.github.io'],
-  methods: ['GET', 'POST'],
+  methods: ['GET', 'POST', 'DELETE', 'PUT', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+app.options('*', cors());
 
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.json({ limit: '50mb' }));
@@ -746,7 +747,7 @@ app.get('/admin/messages/threads', auth, requireAdmin, (req, res) => {
     FROM messages m
     JOIN users u ON u.id = CASE WHEN m.sender_id = ? THEN m.recipient_id ELSE m.sender_id END
     WHERE m.sender_id = ? OR m.recipient_id = ?
-    GROUP BY other_id
+    GROUP BY other_id, u.email, u.prenom, u.nom
     ORDER BY last_created DESC
   `;
   db.all(q, [adminId, adminId, adminId, adminId], (err, rows) => {

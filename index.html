@@ -259,17 +259,15 @@
     gap: 4rem;
     position: relative;
     overflow: hidden;
+    background: #f7f3ea url('t%C3%A9l%C3%A9chargement%20(25)%20(1).jpg') center/cover no-repeat;
   }
 
   .hero::before {
     content: '';
     position: absolute;
-    top: -10%; right: -5%;
-    width: 55vw; height: 90vh;
-    background: radial-gradient(ellipse at 60% 40%, var(--sage-light) 0%, var(--warm-white) 60%, transparent 100%);
+    inset: 0;
+    background: linear-gradient(90deg, rgba(247,243,234,0.98) 0%, rgba(247,243,234,0.92) 40%, rgba(247,243,234,0.65) 70%, rgba(247,243,234,0.25) 100%);
     z-index: 0;
-    border-radius: 40% 60% 60% 40% / 50% 40% 60% 50%;
-    opacity: .55;
   }
 
   .hero-content { position: relative; z-index: 1; }
