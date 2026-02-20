@@ -322,6 +322,8 @@ function getTransporter() {
 
 app.post('/inscription', (req, res) => {
   const { prenom, nom, email, telephone, ville, naissance, password } = req.body;
+  const sortieIdRaw = req.body.sortie_id || req.body.sortieId || null;
+  const sortieId = sortieIdRaw ? parseInt(sortieIdRaw, 10) : null;
   let preferences = req.body.preferences || '';
 
   if (Array.isArray(preferences)) {
@@ -330,6 +332,34 @@ app.post('/inscription', (req, res) => {
 
   if (!prenom || !nom || !email) {
     return res.status(400).send('Merci de remplir au minimum le prénom, le nom et l’email.');
+  }
+
+  function finishInscription() {
+    const transporter = getTransporter();
+    if (transporter) {
+      transporter.sendMail({
+        to: 'vivelaretraite82@gmail.com',
+        from: process.env.FROM_EMAIL || 'no-reply@vivelaretraite.local',
+        subject: 'Nouvelle inscription Vive la Retraite',
+        text: `Prénom: ${prenom}\nNom: ${nom}\nEmail: ${email}\nTéléphone: ${telephone || ''}\nVille: ${ville || ''}\nNaissance: ${naissance || ''}\nPréférences: ${preferences || ''}`
+      }, (e) => {
+        if (e) console.error('Envoi email inscription échoué:', e.message);
+      });
+    }
+    return res.redirect('/?inscription=ok');
+  }
+
+  function ensureReservationForUser(normalizedEmail) {
+    if (!sortieId || !normalizedEmail) return finishInscription();
+    db.get('SELECT id FROM users WHERE email = ?', [normalizedEmail], (e, row) => {
+      if (e || !row) return finishInscription();
+      const sql = `
+        INSERT INTO reservations (user_id, sortie_id)
+        VALUES (?, ?)
+        ON CONFLICT (user_id, sortie_id) DO NOTHING
+      `;
+      db.run(sql, [row.id, sortieId], () => finishInscription());
+    });
   }
 
   const stmt = db.prepare(`
@@ -369,21 +399,17 @@ app.post('/inscription', (req, res) => {
             prenom ? prenom.trim() : null,
             nom ? nom.trim() : null,
             telephone ? telephone.trim() : null
-          ]
+          ],
+          () => {
+            ensureReservationForUser(normalizedEmail);
+          }
         );
+      } else if (email) {
+        const normalizedEmail = email.trim().toLowerCase();
+        ensureReservationForUser(normalizedEmail);
+      } else {
+        finishInscription();
       }
-      const transporter = getTransporter();
-      if (transporter) {
-        transporter.sendMail({
-          to: 'vivelaretraite82@gmail.com',
-          from: process.env.FROM_EMAIL || 'no-reply@vivelaretraite.local',
-          subject: 'Nouvelle inscription Vive la Retraite',
-          text: `Prénom: ${prenom}\nNom: ${nom}\nEmail: ${email}\nTéléphone: ${telephone || ''}\nVille: ${ville || ''}\nNaissance: ${naissance || ''}\nPréférences: ${preferences || ''}`
-        }, (e) => {
-          if (e) console.error('Envoi email inscription échoué:', e.message);
-        });
-      }
-      return res.redirect('/?inscription=ok');
     }
   );
 

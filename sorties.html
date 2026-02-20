@@ -267,6 +267,7 @@
       </div>
       <p class="section-sub" style="margin-bottom:1rem;">Remplissez ce formulaire pour être rappelé(e). La demande est transmise à l’administratrice.</p>
       <form id="sortie-inscription-form" method="post">
+        <input type="hidden" name="sortie_id" id="inscription-sortie-id">
         <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;">
           <div>
             <label style="display:block;font-size:.85rem;margin-bottom:.25rem;">Prénom *</label>
@@ -366,9 +367,12 @@
       document.querySelectorAll('.open-inscription').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const title = e.currentTarget.getAttribute('data-title') || '';
+          const id = e.currentTarget.getAttribute('data-id') || '';
           const modal = document.getElementById('inscription-modal');
           const pref = document.getElementById('inscription-preferences');
+          const idInput = document.getElementById('inscription-sortie-id');
           if (pref) pref.value = 'Sortie : ' + title;
+          if (idInput) idInput.value = id;
           modal.style.display = 'flex';
         });
       });
