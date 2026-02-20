@@ -251,7 +251,6 @@ async function ensurePgSchema() {
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       sortie_id INTEGER NOT NULL REFERENCES sorties(id) ON DELETE CASCADE,
       created_at TIMESTAMPTZ DEFAULT NOW(),
-      status TEXT DEFAULT 'active',
       UNIQUE(user_id, sortie_id)
     )`);
   await pgPool.query(`
@@ -579,7 +578,9 @@ app.get('/me', auth, (req, res) => {
 
 app.get('/me/reservations', auth, (req, res) => {
   const q = `
-    SELECT r.id, r.created_at, r.status, s.id AS sortie_id, s.titre, s.date_iso, s.lieu, s.description
+    SELECT r.id, r.created_at,
+           COALESCE(r.status, 'active') AS status,
+           s.id AS sortie_id, s.titre, s.date_iso, s.lieu, s.description
     FROM reservations r
     JOIN sorties s ON s.id = r.sortie_id
     WHERE r.user_id = ?
@@ -775,7 +776,9 @@ app.post('/messages', auth, (req, res) => {
 
 app.get('/admin/reservations', auth, requireAdmin, (req, res) => {
   const q = `
-    SELECT r.id, r.created_at, r.status, u.email, u.prenom, u.nom, u.telephone,
+    SELECT r.id, r.created_at,
+           COALESCE(r.status, 'active') AS status,
+           u.email, u.prenom, u.nom, u.telephone,
            s.titre, s.date_iso, s.lieu
     FROM reservations r
     JOIN users u ON u.id = r.user_id
@@ -918,10 +921,13 @@ async function bootstrap() {
     try {
       await ensurePgSchema();
       await ensureAdminUserPg();
+      await ensureReservationStatusColumn();
     } catch (e) {
       console.error('Erreur initialisation PostgreSQL:', e);
       process.exit(1);
     }
+  } else {
+    await ensureReservationStatusColumn();
   }
   startServer(PREFERRED_PORT);
 }

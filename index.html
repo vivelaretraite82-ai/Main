@@ -3008,10 +3008,11 @@
       const email = currentUser && currentUser.email ? String(currentUser.email).trim().toLowerCase() : '';
       if (email && email === ADMIN_EMAIL) {
         loadAdminThreads();
+        loadAdminReservations();
       } else {
         loadMessages();
       }
-    }, 15000);
+    }, 5000);
   }
   function openAdminPanel() {
     if (currentUser && String(currentUser.email || '').trim().toLowerCase() === ADMIN_EMAIL) {
