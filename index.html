@@ -101,6 +101,18 @@
     list-style: none;
   }
 
+  .nav-badge {
+    display: inline-block;
+    margin-left: .35rem;
+    padding: .05rem .36rem;
+    border-radius: 999px;
+    background: var(--gold);
+    color: #111;
+    font-size: .55rem;
+    line-height: 1.1;
+    vertical-align: middle;
+  }
+
   .nav-right {
     display: flex;
     align-items: center;
@@ -1456,7 +1468,7 @@
 <!-- NAV -->
 <nav>
   <button type="button" id="nav-menu-toggle" class="nav-menu-toggle" aria-label="Ouvrir le menu">☰</button>
-  <div class="nav-logo">Vive la Retraite</div>
+  <a href="#accueil" class="nav-logo">Vive la Retraite</a>
   <div class="nav-right">
     <ul class="nav-links">
       <li><a href="#activites">Activités</a></li>
@@ -1465,7 +1477,7 @@
       <li><a href="#temoignages">Témoignages</a></li>
       <li><a href="#faq">FAQ</a></li>
       <li><a href="#espace-membre">Espace membre</a></li>
-      <li><a href="messages.html" target="_blank">Messagerie</a></li>
+      <li><a href="messages.html" target="_blank">Messagerie<span id="nav-messages-badge" class="nav-badge" style="display:none;">●</span></a></li>
       <li><a href="#contact" class="nav-cta">Contact</a></li>
       <li id="nav-admin-item" style="display:none;"><a href="#admin-panel">Admin</a></li>
     </ul>
@@ -1492,7 +1504,7 @@
       <li><a href="#temoignages">Témoignages</a></li>
       <li><a href="#faq">FAQ</a></li>
       <li><a href="#espace-membre">Espace membre</a></li>
-      <li><a href="messages.html" target="_blank">Messagerie</a></li>
+      <li><a href="messages.html" target="_blank">Messagerie<span id="nav-messages-badge-mobile" class="nav-badge" style="display:none;">●</span></a></li>
       <li><a href="#contact">Contact</a></li>
       <li id="nav-admin-item-mobile" style="display:none;"><a href="#admin-panel">Admin</a></li>
     </ul>
@@ -2284,11 +2296,14 @@
       return;
     }
     const myId = currentUser && currentUser.id;
+    let lastIncoming = '';
     list.innerHTML = rows.map(m => {
       const mine = myId && m.sender_id === myId;
       const cls = mine ? 'me' : 'them';
       const body = m.body ? String(m.body) : '';
-      const dateStr = m.created_at ? String(m.created_at).replace('T', ' ').slice(0, 16) : '';
+      const created = m.created_at ? String(m.created_at) : '';
+      const dateStr = created ? created.replace('T', ' ').slice(0, 16) : '';
+      if (!mine && created && (!lastIncoming || created > lastIncoming)) lastIncoming = created;
       return `
         <div class="message-item ${cls}">
           <div>
@@ -2299,6 +2314,14 @@
       `;
     }).join('');
     list.scrollTop = list.scrollHeight;
+    const badgeSeenKey = 'vivelaretraite-messages-lastSeen';
+    if (lastIncoming) {
+      const stored = window.localStorage.getItem(badgeSeenKey) || '';
+      const hasUnread = !stored || lastIncoming > stored;
+      setNavMessagesBadge(hasUnread);
+    } else {
+      setNavMessagesBadge(false);
+    }
   }
 
   function loadMessages() {
@@ -2840,6 +2863,15 @@
     });
   }
 
+  function setNavMessagesBadge(on) {
+    const b1 = document.getElementById('nav-messages-badge');
+    const b2 = document.getElementById('nav-messages-badge-mobile');
+    const display = on ? 'inline-block' : 'none';
+    if (b1) b1.style.display = display;
+    if (b2) b2.style.display = display;
+    if (!on) window.localStorage.setItem('vivelaretraite-messages-lastSeen', new Date().toISOString());
+  }
+
   const navMenuToggle = document.getElementById('nav-menu-toggle');
   const navDrawer = document.getElementById('nav-drawer');
   const navDrawerClose = document.getElementById('nav-drawer-close');
@@ -2874,6 +2906,7 @@
   const navAdminItem = document.getElementById('nav-admin-item');
   const navAdminItemMobile = document.getElementById('nav-admin-item-mobile');
   const adminPanel = document.getElementById('admin-panel');
+  let messagesPollTimer = null;
   function updateNavAuth() {
     const hasToken = !!authToken;
     if (navLoginBtn) navLoginBtn.style.display = hasToken ? 'none' : 'inline-block';
@@ -2885,6 +2918,23 @@
     if (navAdminItemMobile) navAdminItemMobile.style.display = isAdmin ? 'list-item' : 'none';
     if (adminPanel) adminPanel.style.display = isAdmin ? 'block' : 'none';
     updateMessagingVisibility();
+  }
+  function startMessagesPolling() {
+    if (messagesPollTimer || !authToken) return;
+    messagesPollTimer = setInterval(() => {
+      if (!authToken) {
+        clearInterval(messagesPollTimer);
+        messagesPollTimer = null;
+        setNavMessagesBadge(false);
+        return;
+      }
+      const email = currentUser && currentUser.email ? String(currentUser.email).trim().toLowerCase() : '';
+      if (email && email === ADMIN_EMAIL) {
+        loadAdminThreads();
+      } else {
+        loadMessages();
+      }
+    }, 15000);
   }
   function openAdminPanel() {
     if (currentUser && String(currentUser.email || '').trim().toLowerCase() === ADMIN_EMAIL) {
@@ -2954,6 +3004,7 @@
             loadReservations();
             updateNavAuth();
             loadMessages();
+            startMessagesPolling();
             closeLogin();
           } else {
             const code = data && data.error;
@@ -3007,6 +3058,7 @@
             loadReservations();
             if (typeof updateNavAuth === 'function') updateNavAuth();
             loadMessages();
+            startMessagesPolling();
           } else {
             const code = data && data.error;
             let msg = 'Impossible de vous connecter.';
@@ -3032,6 +3084,7 @@
           loadReservations();
           if (typeof updateNavAuth === 'function') updateNavAuth();
           loadMessages();
+          startMessagesPolling();
         } else {
           authToken = '';
           window.localStorage.removeItem('vivelaretraite-token');
