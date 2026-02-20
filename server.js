@@ -552,7 +552,7 @@ app.get('/me/reservations', auth, (req, res) => {
 app.post('/sorties/:id/reserver', auth, (req, res) => {
   const sortieId = parseInt(req.params.id, 10);
   if (!sortieId) return res.status(400).json({ error: 'invalid_sortie' });
-  const stmt = db.prepare('INSERT OR IGNORE INTO reservations (user_id, sortie_id) VALUES (?, ?)');
+  const stmt = db.prepare('INSERT INTO reservations (user_id, sortie_id) VALUES (?, ?) ON CONFLICT (user_id, sortie_id) DO NOTHING');
   stmt.run(req.user.uid, sortieId, (err) => {
     if (err) return res.status(500).json({ error: 'db_error' });
     res.json({ ok: true });
