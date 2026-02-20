@@ -2465,6 +2465,7 @@
   function renderSorties(rows) {
     const list = document.getElementById('sorties-list');
     const empty = document.getElementById('sorties-empty');
+    const isAdmin = !!(currentUser && String(currentUser.email || '').trim().toLowerCase() === ADMIN_EMAIL);
     if (!Array.isArray(rows) || rows.length === 0) {
       empty.style.display = 'block';
       return;
@@ -2495,8 +2496,9 @@
             <div class="card-meta">
               <span>${safeDate}</span>${safeLieu ? '<span> • ' + safeLieu + '</span>' : ''}
             </div>
-            <div style="margin-top:1rem;">
+            <div style="margin-top:1rem;display:flex;gap:.5rem;align-items:center;justify-content:space-between;flex-wrap:wrap;">
               <a href="#espace-membre" class="btn-primary sortie-reserver" data-id="${id}" data-titre="${encodeURIComponent(safeTitre)}">Réserver</a>
+              ${isAdmin ? `<button type="button" class="admin-delete-btn sortie-delete-btn" data-id="${id}">Supprimer</button>` : ''}
             </div>
           </div>
         </div>
@@ -2519,6 +2521,28 @@
         reserveSortie(id, titre);
       });
     });
+    if (isAdmin) {
+      list.querySelectorAll('.sortie-delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const id = btn.getAttribute('data-id');
+          if (!id || !authToken) return;
+          const email = currentUser && currentUser.email ? String(currentUser.email).trim().toLowerCase() : '';
+          if (email !== ADMIN_EMAIL) return;
+          const ok = window.confirm('Supprimer définitivement cette sortie ?');
+          if (!ok) return;
+          fetch(API_BASE + '/admin/sorties/' + encodeURIComponent(id), {
+            method: 'DELETE',
+            headers: { Authorization: 'Bearer ' + authToken }
+          })
+            .then(r => r.ok ? r.json() : Promise.reject())
+            .then(() => {
+              fetchAndRenderSorties();
+            })
+            .catch(() => {});
+        });
+      });
+    }
   }
 
   function fetchAndRenderSorties() {
