@@ -219,6 +219,18 @@
     .btn-primary:hover {
       background: var(--sage-dark);
     }
+    .admin-delete-btn {
+      border: 1px solid #B3261E;
+      color: #B3261E;
+      background: transparent;
+      padding: .4rem .7rem;
+      border-radius: 999px;
+      font-size: .78rem;
+      cursor: pointer;
+    }
+    .admin-delete-btn:hover {
+      background: rgba(179,38,30,0.1);
+    }
     #sorties-empty {
       margin-top: 1.5rem;
     }
@@ -312,6 +324,9 @@
   </div>
   <script>
     const API_BASE = 'https://backend-uhg3.onrender.com';
+    const ADMIN_EMAIL = 'vivelaretraite82@gmail.com';
+    let authToken = window.localStorage.getItem('vivelaretraite-token') || '';
+    let currentUser = null;
     function categoryEmoji(c) {
       const k = String(c || '').toLowerCase();
       if (k.includes('cinéma') || k.includes('cinema')) return '🎬';
@@ -328,6 +343,7 @@
     function renderSorties(rows) {
       const list = document.getElementById('sorties-list');
       const empty = document.getElementById('sorties-empty');
+      const isAdmin = !!(currentUser && String(currentUser.email || '').trim().toLowerCase() === ADMIN_EMAIL);
       if (!Array.isArray(rows) || rows.length === 0) {
         empty.style.display = 'block';
         return;
@@ -359,7 +375,10 @@
                 '<span>' + dateIso + '</span>' +
                 (lieu ? '<span>• ' + lieu + '</span>' : '') +
               '</div>' +
-              '<button class="btn-primary open-inscription" type="button" data-id="' + id + '" data-title="' + (titre.replace(/"/g,'&quot;')) + '">S\'inscrire</button>' +
+              '<div style="margin-top:1rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">' +
+                '<button class="btn-primary open-inscription" type="button" data-id="' + id + '" data-title="' + (titre.replace(/"/g,'&quot;')) + '">S\'inscrire</button>' +
+                (isAdmin ? '<button class="admin-delete-btn sortie-delete-btn" type="button" data-id="' + id + '">Supprimer</button>' : '') +
+              '</div>' +
             '</div>' +
           '</div>'
         );
@@ -376,6 +395,26 @@
           modal.style.display = 'flex';
         });
       });
+      if (isAdmin && authToken) {
+        document.querySelectorAll('.sortie-delete-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const id = btn.getAttribute('data-id');
+            if (!id) return;
+            const ok = window.confirm('Supprimer définitivement cette sortie ?');
+            if (!ok) return;
+            fetch(API_BASE + '/admin/sorties/' + encodeURIComponent(id), {
+              method: 'DELETE',
+              headers: { Authorization: 'Bearer ' + authToken }
+            })
+              .then(r => r.ok ? r.json() : Promise.reject())
+              .then(() => {
+                fetchSorties();
+              })
+              .catch(() => {});
+          });
+        });
+      }
     }
     function fetchSorties() {
       fetch(API_BASE + '/api/sorties')
@@ -387,7 +426,6 @@
           empty.textContent = 'Impossible de charger les sorties pour le moment. Merci de réessayer plus tard.';
         });
     }
-    fetchSorties();
     const closeBtn = document.getElementById('close-inscription');
     const modal = document.getElementById('inscription-modal');
     if (closeBtn) closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
@@ -419,6 +457,28 @@
           if (note) { note.style.display = 'block'; note.textContent = 'Erreur réseau. Merci de réessayer.'; }
         }
       });
+    }
+
+    if (authToken) {
+      fetch(API_BASE + '/me', {
+        headers: { Authorization: 'Bearer ' + authToken }
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(user => {
+          if (user && user.email) {
+            currentUser = user;
+            fetchSorties();
+          } else {
+            authToken = '';
+            window.localStorage.removeItem('vivelaretraite-token');
+            fetchSorties();
+          }
+        })
+        .catch(() => {
+          fetchSorties();
+        });
+    } else {
+      fetchSorties();
     }
   </script>
 </body>
