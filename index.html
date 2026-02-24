@@ -119,21 +119,6 @@
     gap: 1.2rem;
   }
 
-  .theme-toggle {
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: rgba(0,0,0,0.02);
-    padding: .25rem .85rem;
-    display: flex;
-    align-items: center;
-    gap: .4rem;
-    font-size: .78rem;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    cursor: pointer;
-    color: var(--text-light);
-  }
-
   .nav-corner-logo {
     height: 36px;
     width: auto;
@@ -1493,10 +1478,6 @@
     <button type="button" id="nav-login" class="nav-cta" style="background:transparent;color:var(--text);border:1px solid var(--border);">Connexion</button>
     <button type="button" id="nav-logout" class="nav-cta" style="display:none;background:transparent;color:var(--text);border:1px solid var(--border);">Déconnexion</button>
     <button type="button" id="open-inscription" class="nav-cta" style="background:var(--gold);color:#111;">Inscription</button>
-    <button type="button" class="theme-toggle" aria-label="Changer de thème">
-      <span class="theme-toggle-icon">🌙</span>
-      <span class="theme-toggle-label">Sombre</span>
-    </button>
   </div>
 </nav>
 
@@ -3204,30 +3185,6 @@
     if (typeof updateNavAuth === 'function') updateNavAuth();
   }
 
-  const themeToggle = document.querySelector('.theme-toggle');
-  const themeIcon = document.querySelector('.theme-toggle-icon');
-  const themeLabel = document.querySelector('.theme-toggle-label');
-  function applyTheme(theme) {
-    if (theme === 'dark') {
-      document.body.setAttribute('data-theme', 'dark');
-      themeIcon.textContent = '☀️';
-      themeLabel.textContent = 'Clair';
-    } else {
-      document.body.removeAttribute('data-theme');
-      themeIcon.textContent = '🌙';
-      themeLabel.textContent = 'Sombre';
-    }
-  }
-  const storedTheme = window.localStorage.getItem('vivelaretraite-theme');
-  applyTheme(storedTheme === 'dark' ? 'dark' : 'light');
-  if (themeToggle) {
-    themeToggle.addEventListener('click', () => {
-      const current = document.body.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-      const next = current === 'dark' ? 'light' : 'dark';
-      window.localStorage.setItem('vivelaretraite-theme', next);
-      applyTheme(next);
-    });
-  }
 </script>
 </body>
 </html>
