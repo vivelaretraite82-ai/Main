@@ -997,7 +997,7 @@ function startServer(initialPort) {
 
 function scheduleSelfPing() {
   const https = require('https');
-  const SELF_URL = process.env.SELF_URL || 'https://backend-uhg3.onrender.com';
+  const SELF_URL = process.env.SELF_URL || 'https://backend-1-cil0.onrender.com';
   setInterval(() => {
     try {
       https.get(SELF_URL + '/ping', (res) => {
