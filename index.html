@@ -91,9 +91,23 @@
     font-weight: 400;
     color: #b9d7b9;
     letter-spacing: .04em;
+    position: relative;
+    display: inline-block;
+    line-height: 1;
   }
 
   .nav-logo span { color: var(--gold); font-style: italic; }
+  .nav-logo::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 76px;
+    height: 76px;
+    background: url('logo.ico') no-repeat center/contain;
+    opacity: 1;
+    pointer-events: none;
+  }
 
   .nav-links {
     display: flex;
@@ -345,18 +359,6 @@
   }
 
   .hero-content { position: relative; z-index: 1; }
-  .hero-content::before {
-    content: '';
-    position: absolute;
-    top: .5rem;
-    left: .5rem;
-    width: 180px;
-    height: 180px;
-    background: url('logo.ico') no-repeat center/contain;
-    opacity: .09;
-    pointer-events: none;
-    z-index: 0;
-  }
 
   .hero-tag {
     display: inline-flex;
