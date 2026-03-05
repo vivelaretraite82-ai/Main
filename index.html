@@ -97,6 +97,18 @@
   }
 
   .nav-logo span { color: var(--gold); font-style: italic; }
+  nav::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 100%;
+    width: 228px;
+    height: 228px;
+    background: url('haut du site.jpg') no-repeat center/contain;
+    opacity: 1;
+    pointer-events: none;
+    z-index: 0;
+  }
 
   .nav-links {
     display: flex;
