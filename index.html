@@ -1477,6 +1477,7 @@
       <!-- Témoignages retirés -->
       <li><a href="#faq">FAQ</a></li>
       <li><a href="#espace-membre">Espace membre</a></li>
+      <li id="nav-profile-item" style="display:none;"><a href="#profil">Profil</a></li>
       <li><a href="messages.html" id="nav-messages-link" target="_blank">Messagerie<span id="nav-messages-badge" class="nav-badge" style="display:none;">●</span></a></li>
       <li><a href="#contact" class="nav-cta">Contact</a></li>
       <li id="nav-admin-item" style="display:none;"><a href="#admin-panel">Admin</a></li>
@@ -1500,6 +1501,7 @@
       <!-- Témoignages retirés -->
       <li><a href="#faq">FAQ</a></li>
       <li><a href="#espace-membre">Espace membre</a></li>
+      <li id="nav-profile-item-mobile" style="display:none;"><a href="#profil">Profil</a></li>
       <li><a href="messages.html" id="nav-messages-link-mobile" target="_blank">Messagerie<span id="nav-messages-badge-mobile" class="nav-badge" style="display:none;">●</span></a></li>
       <li><a href="#contact">Contact</a></li>
       <li id="nav-admin-item-mobile" style="display:none;"><a href="#admin-panel">Admin</a></li>
@@ -2072,6 +2074,7 @@
       <div class="member-status" id="member-status"></div>
       <div class="member-reservations" id="member-reservations"></div>
     </div>
+    <div id="profil"></div>
     <div class="form-card reveal" id="profile-card" style="display:none;">
       <h3>Mon profil</h3>
       <form id="profile-form">
@@ -3038,6 +3041,8 @@
   const navLogoutBtn = document.getElementById('nav-logout');
   const navAdminItem = document.getElementById('nav-admin-item');
   const navAdminItemMobile = document.getElementById('nav-admin-item-mobile');
+  const navProfileItem = document.getElementById('nav-profile-item');
+  const navProfileItemMobile = document.getElementById('nav-profile-item-mobile');
   const memberLinks = Array.from(document.querySelectorAll('a[href="#espace-membre"]'));
   const memberSection = document.getElementById('espace-membre');
   const adminPanel = document.getElementById('admin-panel');
@@ -3048,6 +3053,8 @@
     const openInscr = document.getElementById('open-inscription');
     if (openInscr) openInscr.style.display = hasToken ? 'none' : 'inline-block';
     if (navLogoutBtn) navLogoutBtn.style.display = hasToken ? 'inline-block' : 'none';
+    if (navProfileItem) navProfileItem.style.display = hasToken ? 'inline-block' : 'none';
+    if (navProfileItemMobile) navProfileItemMobile.style.display = hasToken ? 'list-item' : 'none';
     const isAdmin = !!(currentUser && [''+ADMIN_EMAIL, ''+ADMIN_EMAIL2].includes(String(currentUser.email || '').trim().toLowerCase()));
     if (navAdminItem) navAdminItem.style.display = isAdmin ? 'inline-block' : 'none';
     if (navAdminItemMobile) navAdminItemMobile.style.display = isAdmin ? 'list-item' : 'none';
