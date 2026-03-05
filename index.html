@@ -1346,7 +1346,7 @@
     color: rgba(255,255,255,.9);
     display: block;
     margin-bottom: 1rem;
-    font-size: 1.4rem;
+    font-size: 2.1rem;
   }
   .footer-logo-img {
     height: 64px;
@@ -1358,13 +1358,13 @@
   }
 
   .footer-brand p {
-    font-size: .82rem;
+    font-size: 1.23rem;
     line-height: 1.8;
     max-width: 240px;
   }
 
   .footer-col h4 {
-    font-size: .72rem;
+    font-size: 1.08rem;
     letter-spacing: .15em;
     text-transform: uppercase;
     color: rgba(255,255,255,.8);
@@ -1376,7 +1376,7 @@
   .footer-col ul a {
     text-decoration: none;
     color: rgba(255,255,255,.45);
-    font-size: .83rem;
+    font-size: 1.245rem;
     transition: color .25s;
   }
   .footer-col ul a:hover { color: var(--sage-light); }
@@ -1387,7 +1387,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: .75rem;
+    font-size: 1.125rem;
     color: rgba(255,255,255,.3);
   }
 
@@ -2961,6 +2961,7 @@
   const navAdminItem = document.getElementById('nav-admin-item');
   const navAdminItemMobile = document.getElementById('nav-admin-item-mobile');
   const memberLinks = Array.from(document.querySelectorAll('a[href="#espace-membre"]'));
+  const memberSection = document.getElementById('espace-membre');
   const adminPanel = document.getElementById('admin-panel');
   let messagesPollTimer = null;
   function updateNavAuth() {
@@ -2979,6 +2980,7 @@
         if (li) li.style.display = isAdmin ? 'none' : '';
       });
     }
+    if (memberSection) memberSection.style.display = isAdmin ? 'none' : '';
     updateMessagingVisibility();
   }
   function startMessagesPolling() {
