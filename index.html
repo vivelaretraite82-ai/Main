@@ -2062,7 +2062,7 @@
           </div>
         </div>
         <div class="form-row-bottom">
-          <small>Mot de passe oublié ? Alexandra peut vous aider par téléphone.</small>
+          <small>Mot de passe oublié ? Alexandra peut vous aider par Messagerie.</small>
           <button type="submit" class="btn-primary">Me connecter</button>
         </div>
       </form>
@@ -2981,6 +2981,10 @@
       });
     }
     if (memberSection) memberSection.style.display = isAdmin ? 'none' : '';
+    const memberFormCard = document.querySelector('#espace-membre .form-card');
+    const memberReservationsEl = document.getElementById('member-reservations');
+    if (memberFormCard) memberFormCard.style.display = hasToken ? 'none' : '';
+    if (memberReservationsEl) memberReservationsEl.style.display = hasToken ? 'block' : '';
     updateMessagingVisibility();
   }
   function startMessagesPolling() {
