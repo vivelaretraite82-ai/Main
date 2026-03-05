@@ -392,12 +392,54 @@
         btn.addEventListener('click', (e) => {
           const title = e.currentTarget.getAttribute('data-title') || '';
           const id = e.currentTarget.getAttribute('data-id') || '';
-          const modal = document.getElementById('inscription-modal');
-          const pref = document.getElementById('inscription-preferences');
-          const idInput = document.getElementById('inscription-sortie-id');
-          if (pref) pref.value = 'Sortie : ' + title;
-          if (idInput) idInput.value = id;
-          modal.style.display = 'flex';
+          if (authToken) {
+            fetch(API_BASE + '/me', { headers: { Authorization: 'Bearer ' + authToken } })
+              .then(r => r.ok ? r.json() : null)
+              .then(user => {
+                const complete = user && ['prenom','nom','telephone','adresse','naissance'].every(k => !!String(user[k] || '').trim());
+                if (complete) {
+                  fetch(API_BASE + '/sorties/' + encodeURIComponent(id) + '/reserver', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + authToken }
+                  })
+                    .then(r => r.json().then(data => ({ ok: r.ok, data })))
+                    .then(({ ok }) => {
+                      const note = document.getElementById('inscription-note');
+                      if (ok) {
+                        if (note) { note.style.display = 'block'; note.textContent = 'Inscription enregistrée via votre profil.'; }
+                      } else {
+                        if (note) { note.style.display = 'block'; note.textContent = 'Envoi impossible. Merci de compléter votre profil ou réessayer plus tard.'; }
+                      }
+                    })
+                    .catch(() => {
+                      const note = document.getElementById('inscription-note');
+                      if (note) { note.style.display = 'block'; note.textContent = 'Erreur réseau. Merci de réessayer.'; }
+                    });
+                } else {
+                  const modal = document.getElementById('inscription-modal');
+                  const pref = document.getElementById('inscription-preferences');
+                  const idInput = document.getElementById('inscription-sortie-id');
+                  if (pref) pref.value = 'Sortie : ' + title + ' • merci de compléter votre profil.';
+                  if (idInput) idInput.value = id;
+                  modal.style.display = 'flex';
+                }
+              })
+              .catch(() => {
+                const modal = document.getElementById('inscription-modal');
+                const pref = document.getElementById('inscription-preferences');
+                const idInput = document.getElementById('inscription-sortie-id');
+                if (pref) pref.value = 'Sortie : ' + title;
+                if (idInput) idInput.value = id;
+                modal.style.display = 'flex';
+              });
+          } else {
+            const modal = document.getElementById('inscription-modal');
+            const pref = document.getElementById('inscription-preferences');
+            const idInput = document.getElementById('inscription-sortie-id');
+            if (pref) pref.value = 'Sortie : ' + title;
+            if (idInput) idInput.value = id;
+            modal.style.display = 'flex';
+          }
         });
       });
       if (isAdmin && authToken) {
@@ -450,7 +492,7 @@
             redirect: 'follow'
           });
           const note = document.getElementById('inscription-note');
-          if (res.ok) {
+          if (res.status < 400) {
             form.reset();
             if (note) { note.style.display = 'block'; note.textContent = 'Inscription envoyée. Nous vous recontactons rapidement.'; }
             setTimeout(() => { modal.style.display = 'none'; }, 900);
