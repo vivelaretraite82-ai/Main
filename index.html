@@ -3053,8 +3053,8 @@
     const openInscr = document.getElementById('open-inscription');
     if (openInscr) openInscr.style.display = hasToken ? 'none' : 'inline-block';
     if (navLogoutBtn) navLogoutBtn.style.display = hasToken ? 'inline-block' : 'none';
-    if (navProfileItem) navProfileItem.style.display = hasToken ? 'inline-block' : 'none';
-    if (navProfileItemMobile) navProfileItemMobile.style.display = hasToken ? 'list-item' : 'none';
+    if (navProfileItem) navProfileItem.style.display = '';
+    if (navProfileItemMobile) navProfileItemMobile.style.display = 'list-item';
     const isAdmin = !!(currentUser && [''+ADMIN_EMAIL, ''+ADMIN_EMAIL2].includes(String(currentUser.email || '').trim().toLowerCase()));
     if (navAdminItem) navAdminItem.style.display = isAdmin ? 'inline-block' : 'none';
     if (navAdminItemMobile) navAdminItemMobile.style.display = isAdmin ? 'list-item' : 'none';
@@ -3108,6 +3108,16 @@
   if (navAdminItemMobile) {
     navAdminItemMobile.addEventListener('click', openAdminPanel);
   }
+  const navProfileItemLink = document.querySelector('#nav-profile-item a[href="#profil"]');
+  const navProfileItemMobileLink = document.querySelector('#nav-profile-item-mobile a[href="#profil"]');
+  function ensureAuthThenScrollProfile(e) {
+    if (!authToken) {
+      e.preventDefault();
+      openLogin();
+    }
+  }
+  if (navProfileItemLink) navProfileItemLink.addEventListener('click', ensureAuthThenScrollProfile);
+  if (navProfileItemMobileLink) navProfileItemMobileLink.addEventListener('click', ensureAuthThenScrollProfile);
   const loginModal = document.getElementById('login-modal');
   const closeLoginBtn = document.getElementById('close-login');
   function openLogin() {
