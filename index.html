@@ -3108,16 +3108,6 @@
   if (navAdminItemMobile) {
     navAdminItemMobile.addEventListener('click', openAdminPanel);
   }
-  const navProfileItemLink = document.querySelector('#nav-profile-item a');
-  const navProfileItemMobileLink = document.querySelector('#nav-profile-item-mobile a');
-  function ensureAuthThenScrollProfile(e) {
-    if (!authToken) {
-      e.preventDefault();
-      openLogin();
-    }
-  }
-  if (navProfileItemLink) navProfileItemLink.addEventListener('click', ensureAuthThenScrollProfile);
-  if (navProfileItemMobileLink) navProfileItemMobileLink.addEventListener('click', ensureAuthThenScrollProfile);
   const loginModal = document.getElementById('login-modal');
   const closeLoginBtn = document.getElementById('close-login');
   function openLogin() {
