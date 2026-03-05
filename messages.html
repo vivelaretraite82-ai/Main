@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Messagerie — Vive la Retraite</title>
+  <title>Messagerie — Les Petites Virées</title>
   <link rel="icon" href="logo.ico" type="image/x-icon">
   <link rel="apple-touch-icon" href="logo.ico">
   <style>
@@ -137,7 +137,7 @@
 <body>
   <header>
     <a class="back-link" href="index.html">← Retour à l’accueil</a>
-    <div class="brand">Vive la <em>Retraite</em> — Messagerie</div>
+    <div class="brand">Les <em>Petites Virées</em> — Messagerie</div>
   </header>
 
   <div class="container" id="app"></div>
@@ -145,14 +145,21 @@
   <script>
     // Toujours pointer vers le backend public pour éviter les erreurs d’origine
     const API_BASE = 'https://backend-uhg3.onrender.com';
-    const ADMIN_EMAIL = 'vivelaretraite82@gmail.com';
+    const ADMIN_EMAIL = 'lespetitesvirees@gmail.com';
+    const ADMIN_EMAIL2 = 'vivelaretraite82@gmail.com';
     let authToken = window.localStorage.getItem('vivelaretraite-token') || '';
     let currentUser = null;
     let adminActiveUserId = null;
+    setInterval(() => {
+      fetch(API_BASE + '/ping', { cache: 'no-store' }).catch(() => {});
+    }, 120000);
 
     function h(html) { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstChild; }
     function dateStr(s) { return s ? String(s).replace('T',' ').slice(0,16) : ''; }
-    function isAdminEmail(e) { return String(e || '').trim().toLowerCase() === ADMIN_EMAIL; }
+    function isAdminEmail(e) {
+      const x = String(e || '').trim().toLowerCase();
+      return x === ADMIN_EMAIL || x === ADMIN_EMAIL2;
+    }
 
     function renderGate() {
       const app = document.getElementById('app');

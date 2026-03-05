@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sorties à venir — Vive la Retraite</title>
+  <title>Sorties à venir — Les Petites Virées</title>
   <link rel="icon" href="logo.ico" type="image/x-icon">
   <link rel="apple-touch-icon" href="logo.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -249,7 +249,7 @@
 </head>
 <body>
   <nav>
-    <a href="index.html#accueil" class="nav-logo">Vive la Retraite</a>
+    <a href="index.html#accueil" class="nav-logo">Les Petites Virées</a>
     <div class="nav-right">
       <ul class="nav-links">
         <li><a href="index.html#accueil">Accueil</a></li>
@@ -324,7 +324,8 @@
   </div>
   <script>
     const API_BASE = 'https://backend-uhg3.onrender.com';
-    const ADMIN_EMAIL = 'vivelaretraite82@gmail.com';
+    const ADMIN_EMAIL = 'lespetitesvirees@gmail.com';
+    const ADMIN_EMAIL2 = 'vivelaretraite82@gmail.com';
     let authToken = window.localStorage.getItem('vivelaretraite-token') || '';
     let currentUser = null;
     function categoryEmoji(c) {
@@ -343,12 +344,15 @@
     function renderSorties(rows) {
       const list = document.getElementById('sorties-list');
       const empty = document.getElementById('sorties-empty');
-      const isAdmin = !!(currentUser && String(currentUser.email || '').trim().toLowerCase() === ADMIN_EMAIL);
+      const isAdmin = !!(currentUser && [ADMIN_EMAIL, ADMIN_EMAIL2].includes(String(currentUser.email || '').trim().toLowerCase()));
       if (!Array.isArray(rows) || rows.length === 0) {
         empty.style.display = 'block';
         return;
       }
       empty.style.display = 'none';
+      setInterval(() => {
+        fetch(API_BASE + '/ping', { cache: 'no-store' }).catch(() => {});
+      }, 120000);
       list.innerHTML = rows.map(s => {
         const id = s.id ? String(s.id) : '';
         const titre = s.titre ? String(s.titre) : '';
@@ -374,6 +378,7 @@
               '<div class="card-meta">' +
                 '<span>' + dateIso + '</span>' +
                 (lieu ? '<span>• ' + lieu + '</span>' : '') +
+                (s.tarif ? '<span>• Tarif: ' + String(s.tarif) + '</span>' : '') +
               '</div>' +
               '<div style="margin-top:1rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">' +
                 '<button class="btn-primary open-inscription" type="button" data-id="' + id + '" data-title="' + (titre.replace(/"/g,'&quot;')) + '">S\'inscrire</button>' +
