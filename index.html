@@ -3108,6 +3108,22 @@
   if (navAdminItemMobile) {
     navAdminItemMobile.addEventListener('click', openAdminPanel);
   }
+  const profileLinks = Array.from(document.querySelectorAll('#nav-profile-item a, #nav-profile-item-mobile a'));
+  function robustProfileNavigation(e) {
+    const href = (e && e.currentTarget && e.currentTarget.getAttribute('href')) || 'profil.html';
+    fetch(href, { method: 'HEAD', cache: 'no-store' })
+      .then(r => {
+        if (!r.ok) {
+          e.preventDefault();
+          window.location.hash = 'profil';
+        }
+      })
+      .catch(() => {
+        e.preventDefault();
+        window.location.hash = 'profil';
+      });
+  }
+  profileLinks.forEach(a => a.addEventListener('click', robustProfileNavigation));
   const loginModal = document.getElementById('login-modal');
   const closeLoginBtn = document.getElementById('close-login');
   function openLogin() {
