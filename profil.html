@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Mon profil — Les Petites Virées</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --sage:#7A9E7E; --sage-dark:#4A6E4E; --cream:#FAF7F2; --text:#2C2C2C; --border:#E0D8CC; --gold:#C9A96E; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Jost',sans-serif; background:var(--cream); color:var(--text); font-size:18px; }
+  nav { display:flex; justify-content:space-between; align-items:center; padding:1rem 1.6rem; background:#111; color:#fff; position:sticky; top:0; z-index:10; }
+  .nav-links { list-style:none; display:flex; gap:1.6rem; }
+  .nav-links a { color:#fff; text-decoration:none; }
+  .container { max-width:960px; margin:2rem auto; padding:0 1rem; }
+  .feedback-banner { display:none; background:var(--gold); color:#111; padding:.8rem 1rem; border-radius:8px; margin-bottom:1rem; }
+  .feedback-banner.visible { display:block; }
+  .form-card { background:#fff; border:1px solid var(--border); border-radius:6px; padding:1.5rem; box-shadow:0 14px 40px rgba(0,0,0,.12); }
+  .form-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:1rem; }
+  .form-group { display:flex; flex-direction:column; gap:.35rem; }
+  .form-label { font-size:.95rem; }
+  .form-input { border:1px solid var(--border); border-radius:4px; padding:.6rem .7rem; font-size:1rem; }
+  .form-row-bottom { display:flex; justify-content:space-between; align-items:center; margin-top:1rem; }
+  .btn-primary { background:var(--gold); color:#111; border:none; border-radius:4px; padding:.7rem 1.2rem; cursor:pointer; }
+  .note { margin-top:.8rem; font-size:.95rem; }
+  .login-card { margin-bottom:1.2rem; }
+</style>
+</head>
+<body>
+<nav>
+  <div>Les Petites Virées</div>
+  <ul class="nav-links">
+    <li><a href="index.html">Accueil</a></li>
+    <li><a href="sorties.html">Sorties</a></li>
+    <li><a href="messages.html" target="_blank">Messagerie</a></li>
+  </ul>
+</nav>
+<div class="container">
+  <div id="profile-banner" class="feedback-banner"></div>
+  <div id="login-block" class="form-card login-card" style="display:none;">
+    <h3 style="font-family:'Cormorant Garamond',serif;">Connexion</h3>
+    <p>Connectez-vous pour accéder à votre profil.</p>
+    <form id="login-form">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label" for="login-email"><span>*</span> Email</label>
+          <input class="form-input" type="email" id="login-email" name="email" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="login-password"><span>*</span> Mot de passe</label>
+          <input class="form-input" type="password" id="login-password" name="password" required>
+        </div>
+      </div>
+      <div class="form-row-bottom">
+        <small>Besoin d’aide ? Écrivez via la Messagerie.</small>
+        <button type="submit" class="btn-primary">Me connecter</button>
+      </div>
+    </form>
+    <div class="note" id="login-note"></div>
+  </div>
+  <div class="form-card" id="profile-card" style="display:none;">
+    <h3 style="font-family:'Cormorant Garamond',serif;">Mon profil</h3>
+    <form id="profile-form">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label" for="profile-prenom"><span>*</span> Prénom</label>
+          <input class="form-input" type="text" id="profile-prenom" name="prenom" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="profile-nom"><span>*</span> Nom</label>
+          <input class="form-input" type="text" id="profile-nom" name="nom" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="profile-telephone"><span>*</span> Téléphone</label>
+          <input class="form-input" type="text" id="profile-telephone" name="telephone" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="profile-adresse"><span>*</span> Adresse</label>
+          <input class="form-input" type="text" id="profile-adresse" name="adresse" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="profile-naissance"><span>*</span> Année de naissance</label>
+          <input class="form-input" type="text" id="profile-naissance" name="naissance" required>
+        </div>
+      </div>
+      <div class="form-row-bottom">
+        <small>Vos informations restent privées.</small>
+        <button type="submit" class="btn-primary">Enregistrer mon profil</button>
+      </div>
+    </form>
+    <div class="note" id="profile-note"></div>
+  </div>
+</div>
+<script>
+  const API_BASE = 'https://backend-1-cil0.onrender.com';
+  let authToken = window.localStorage.getItem('vivelaretraite-token') || '';
+  let currentUser = null;
+  function isProfileComplete(u) {
+    if (!u) return false;
+    const needed = ['prenom','nom','telephone','adresse','naissance'];
+    return needed.every(k => !!String(u[k] || '').trim());
+  }
+  function showProfileBanner() {
+    const b = document.getElementById('profile-banner');
+    if (!b) return;
+    if (currentUser && !isProfileComplete(currentUser)) {
+      b.textContent = 'Complétez votre profil pour vous inscrire rapidement aux sorties.';
+      b.classList.add('visible');
+    } else {
+      b.classList.remove('visible');
+    }
+  }
+  function renderAuthState() {
+    const loginBlock = document.getElementById('login-block');
+    const profileCard = document.getElementById('profile-card');
+    if (authToken) {
+      if (loginBlock) loginBlock.style.display = 'none';
+      if (profileCard) profileCard.style.display = 'block';
+    } else {
+      if (loginBlock) loginBlock.style.display = 'block';
+      if (profileCard) profileCard.style.display = 'none';
+    }
+  }
+  function fillProfileForm(u) {
+    const map = { prenom:'profile-prenom', nom:'profile-nom', telephone:'profile-telephone', adresse:'profile-adresse', naissance:'profile-naissance' };
+    Object.keys(map).forEach(k => {
+      const el = document.getElementById(map[k]);
+      if (el) el.value = String(u && u[k] || '');
+    });
+  }
+  function loadMe() {
+    if (!authToken) return;
+    fetch(API_BASE + '/me', { headers: { Authorization: 'Bearer ' + authToken } })
+      .then(r => r.ok ? r.json() : null)
+      .then(u => {
+        if (u && u.email) {
+          currentUser = u;
+          renderAuthState();
+          fillProfileForm(u);
+          showProfileBanner();
+        } else {
+          authToken = '';
+          window.localStorage.removeItem('vivelaretraite-token');
+          renderAuthState();
+        }
+      })
+      .catch(() => {});
+  }
+  renderAuthState();
+  loadMe();
+  const loginForm = document.getElementById('login-form');
+  const loginNote = document.getElementById('login-note');
+  if (loginForm) {
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (loginNote) loginNote.textContent = '';
+      const fd = new FormData(loginForm);
+      const email = String(fd.get('email') || '').trim();
+      const password = String(fd.get('password') || '');
+      if (!email || !password) {
+        if (loginNote) loginNote.textContent = 'Merci de renseigner votre email et votre mot de passe.';
+        return;
+      }
+      fetch(API_BASE + '/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
+        .then(r => r.json().then(data => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+          if (ok && data && data.token && data.user) {
+            authToken = data.token;
+            window.localStorage.setItem('vivelaretraite-token', authToken);
+            currentUser = data.user;
+            renderAuthState();
+            fillProfileForm(currentUser);
+            showProfileBanner();
+          } else {
+            const code = data && data.error;
+            let msg = 'Impossible de vous connecter.';
+            if (code === 'invalid_credentials') msg = 'Email ou mot de passe incorrect.';
+            if (loginNote) loginNote.textContent = msg;
+          }
+        })
+        .catch(() => {
+          if (loginNote) loginNote.textContent = 'Erreur réseau. Merci de réessayer.';
+        });
+    });
+  }
+  const profileForm = document.getElementById('profile-form');
+  if (profileForm) {
+    profileForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!authToken) return;
+      const fd = new FormData(profileForm);
+      const payload = {};
+      fd.forEach((v, k) => { payload[k] = String(v || '').trim(); });
+      fetch(API_BASE + '/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + authToken },
+        body: JSON.stringify(payload)
+      })
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(user => {
+          currentUser = user;
+          fillProfileForm(currentUser);
+          showProfileBanner();
+          const note = document.getElementById('profile-note');
+          if (note) note.textContent = 'Profil enregistré.';
+        })
+        .catch(() => {
+          const note = document.getElementById('profile-note');
+          if (note) note.textContent = 'Erreur lors de l’enregistrement du profil.';
+        });
+    });
+  }
+</script>
+</body>
+</html>
