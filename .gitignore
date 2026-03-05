@@ -1,0 +1,21 @@
+# Ne publier que le frontend (Pages). Ignorer backend et fichiers sensibles/local.
+server.js
+package.json
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+node_modules/
+.env
+.env.*
+.DS_Store
+
+# Données locales / uploads
+uploads/
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Fichiers divers non nécessaires au site public
+Untitled-1.txt
+a faire pour SEO.txt
