@@ -1,7 +1,4 @@
-# Ne publier que le frontend (Pages). Ignorer backend et fichiers sensibles/local.
-server.js
-package.json
-package-lock.json
+# Ne publier que le frontend (Pages). Ignorer fichiers sensibles/local.
 yarn.lock
 pnpm-lock.yaml
 node_modules/
