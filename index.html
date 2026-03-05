@@ -2069,6 +2069,38 @@
       <div class="member-status" id="member-status"></div>
       <div class="member-reservations" id="member-reservations"></div>
     </div>
+    <div class="form-card reveal" id="profile-card" style="display:none;">
+      <h3>Mon profil</h3>
+      <form id="profile-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="profile-prenom"><span>*</span> Prénom</label>
+            <input class="form-input" type="text" id="profile-prenom" name="prenom" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="profile-nom"><span>*</span> Nom</label>
+            <input class="form-input" type="text" id="profile-nom" name="nom" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="profile-telephone"><span>*</span> Téléphone</label>
+            <input class="form-input" type="text" id="profile-telephone" name="telephone" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="profile-adresse"><span>*</span> Adresse</label>
+            <input class="form-input" type="text" id="profile-adresse" name="adresse" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="profile-naissance"><span>*</span> Année de naissance</label>
+            <input class="form-input" type="text" id="profile-naissance" name="naissance" required>
+          </div>
+        </div>
+        <div class="form-row-bottom">
+          <small>Vos informations restent privées.</small>
+          <button type="submit" class="btn-primary">Enregistrer mon profil</button>
+        </div>
+      </form>
+      <div class="member-status" id="profile-note"></div>
+    </div>
   </div>
 </section>
 
@@ -2347,6 +2379,48 @@
       .then(r => r.ok ? r.json() : [])
       .then(rows => renderReservations(rows))
       .catch(() => {});
+  }
+  function isProfileComplete(u) {
+    if (!u) return false;
+    const fields = ['prenom','nom','telephone','adresse','naissance'];
+    return fields.every(k => !!String(u[k] || '').trim());
+  }
+  function checkProfileBanner() {
+    const banner = document.getElementById('feedback-banner');
+    if (!banner) return;
+    if (currentUser && !isProfileComplete(currentUser)) {
+      banner.textContent = 'Complétez votre profil pour vous inscrire rapidement aux sorties.';
+      banner.style.background = 'var(--gold)';
+      banner.classList.add('visible');
+    } else {
+      banner.classList.remove('visible');
+    }
+  }
+  const profileForm = document.getElementById('profile-form');
+  if (profileForm) {
+    profileForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!authToken) return;
+      const fd = new FormData(profileForm);
+      const payload = {};
+      fd.forEach((v, k) => { payload[k] = String(v || '').trim(); });
+      fetch(API_BASE + '/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + authToken },
+        body: JSON.stringify(payload)
+      })
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(user => {
+          currentUser = user;
+          const note = document.getElementById('profile-note');
+          if (note) note.textContent = 'Profil enregistré.';
+          checkProfileBanner();
+        })
+        .catch(() => {
+          const note = document.getElementById('profile-note');
+          if (note) note.textContent = 'Erreur lors de l’enregistrement du profil.';
+        });
+    });
   }
 
   function reserveSortie(id, titre) {
@@ -2990,6 +3064,8 @@
     if (loginHeaderEl) loginHeaderEl.style.display = hasToken ? 'none' : '';
     if (loginLeadEl) loginLeadEl.style.display = hasToken ? 'none' : '';
     if (memberReservationsEl) memberReservationsEl.style.display = hasToken ? 'block' : '';
+    const profileCard = document.getElementById('profile-card');
+    if (profileCard) profileCard.style.display = (hasToken && !isAdmin) ? 'block' : 'none';
     updateMessagingVisibility();
   }
   function startMessagesPolling() {
@@ -3133,6 +3209,15 @@
             if (typeof updateNavAuth === 'function') updateNavAuth();
             loadMessages();
             startMessagesPolling();
+            checkProfileBanner();
+            const f = document.getElementById('profile-form');
+            if (f) {
+              const map = { prenom:'profile-prenom', nom:'profile-nom', telephone:'profile-telephone', adresse:'profile-adresse', naissance:'profile-naissance' };
+              Object.keys(map).forEach(k => {
+                const el = document.getElementById(map[k]);
+                if (el) el.value = String((data.user && data.user[k]) || '');
+              });
+            }
           } else {
             const code = data && data.error;
             let msg = 'Impossible de vous connecter.';
@@ -3159,6 +3244,15 @@
           if (typeof updateNavAuth === 'function') updateNavAuth();
           loadMessages();
           startMessagesPolling();
+          checkProfileBanner();
+          const f = document.getElementById('profile-form');
+          if (f) {
+            const map = { prenom:'profile-prenom', nom:'profile-nom', telephone:'profile-telephone', adresse:'profile-adresse', naissance:'profile-naissance' };
+            Object.keys(map).forEach(k => {
+              const el = document.getElementById(map[k]);
+              if (el) el.value = String(user[k] || '');
+            });
+          }
         } else {
           authToken = '';
           window.localStorage.removeItem('vivelaretraite-token');
