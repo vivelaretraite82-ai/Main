@@ -2359,16 +2359,17 @@
       }
     })
       .then(r => r.json().then(data => ({ ok: r.ok, data })))
-      .then(({ ok }) => {
+      .then(({ ok, data }) => {
         if (ok) {
           setMemberStatus('Votre réservation pour "' + titre + '" est enregistrée.');
           loadReservations();
         } else {
-          setMemberStatus('Impossible d’enregistrer la réservation. Merci de réessayer.');
+          const msg = data && (data.error || data.message);
+          setMemberStatus(msg ? ('Envoi impossible: ' + String(msg)) : 'Envoi impossible. Merci de réessayer plus tard.');
         }
       })
       .catch(() => {
-        setMemberStatus('Impossible d’enregistrer la réservation. Merci de réessayer.');
+        setMemberStatus('Envoi impossible. Merci de réessayer plus tard.');
       });
   }
 
@@ -2981,9 +2982,13 @@
       });
     }
     if (memberSection) memberSection.style.display = isAdmin ? 'none' : '';
-    const memberFormCard = document.querySelector('#espace-membre .form-card');
     const memberReservationsEl = document.getElementById('member-reservations');
-    if (memberFormCard) memberFormCard.style.display = hasToken ? 'none' : '';
+    const loginFormEl = document.getElementById('login-form');
+    const loginHeaderEl = document.querySelector('#espace-membre .form-card h3');
+    const loginLeadEl = document.querySelector('#espace-membre .form-card p');
+    if (loginFormEl) loginFormEl.style.display = hasToken ? 'none' : '';
+    if (loginHeaderEl) loginHeaderEl.style.display = hasToken ? 'none' : '';
+    if (loginLeadEl) loginLeadEl.style.display = hasToken ? 'none' : '';
     if (memberReservationsEl) memberReservationsEl.style.display = hasToken ? 'block' : '';
     updateMessagingVisibility();
   }
