@@ -87,7 +87,7 @@
 
   .nav-logo {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 1.6rem;
+    font-size: 3.2rem;
     font-weight: 400;
     color: #b9d7b9;
     letter-spacing: .04em;
@@ -345,6 +345,18 @@
   }
 
   .hero-content { position: relative; z-index: 1; }
+  .hero-content::before {
+    content: '';
+    position: absolute;
+    top: .5rem;
+    left: .5rem;
+    width: 180px;
+    height: 180px;
+    background: url('logo.ico') no-repeat center/contain;
+    opacity: .09;
+    pointer-events: none;
+    z-index: 0;
+  }
 
   .hero-tag {
     display: inline-flex;
@@ -1508,7 +1520,7 @@
   <div class="hero-content">
     <div class="hero-tag">Les Petites Virées avec Alexandra</div>
     <h1>Chaque journée<br>mérite d’être<br><em>une aventure</em></h1>
-    <p class="hero-desc">Alexandra vous accompagne dans la découverte d’activités culturelles et sociales, pensées pour votre confort et épanouissement.</p>
+      <p class="hero-desc">Alexandra vous accompagne dans la découverte d’activités culturelles et sociales, pensées pour votre confort et épanouissement.</p>
     <div class="hero-actions">
       <a href="#activites" class="btn-primary">Découvrir les sorties</a>
       <a href="#comment" class="btn-outline"><span class="arrow"></span>Comment ça marche</a>
@@ -1889,7 +1901,7 @@
       <a class="btn-primary" href="tel:+33667095143">Appeler maintenant</a>
       <button type="button" class="btn-outline" id="copy-call-number">Copier le numéro</button>
     </div>
-    <div class="call-note">Numéro: 06 67 09 51 43 .</div>
+    <div class="call-note">Numéro: 06 67 09 51 43 —</div>
     <div class="form-card" style="margin:0;">
       <h3>Commentaires récents</h3>
       <div id="call-comments" class="call-comments"></div>
@@ -2958,6 +2970,7 @@
   const navLogoutBtn = document.getElementById('nav-logout');
   const navAdminItem = document.getElementById('nav-admin-item');
   const navAdminItemMobile = document.getElementById('nav-admin-item-mobile');
+  const memberLinks = Array.from(document.querySelectorAll('a[href="#espace-membre"]'));
   const adminPanel = document.getElementById('admin-panel');
   let messagesPollTimer = null;
   function updateNavAuth() {
@@ -2970,6 +2983,12 @@
     if (navAdminItem) navAdminItem.style.display = isAdmin ? 'inline-block' : 'none';
     if (navAdminItemMobile) navAdminItemMobile.style.display = isAdmin ? 'list-item' : 'none';
     if (adminPanel) adminPanel.style.display = isAdmin ? 'block' : 'none';
+    if (memberLinks && memberLinks.length) {
+      memberLinks.forEach(a => {
+        const li = a.closest('li');
+        if (li) li.style.display = isAdmin ? 'none' : '';
+      });
+    }
     updateMessagingVisibility();
   }
   function startMessagesPolling() {
