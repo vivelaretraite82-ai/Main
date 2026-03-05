@@ -3055,7 +3055,7 @@
         if (li) li.style.display = isAdmin ? 'none' : '';
       });
     }
-    if (memberSection) memberSection.style.display = isAdmin ? 'none' : '';
+    if (memberSection) memberSection.style.display = '';
     const memberReservationsEl = document.getElementById('member-reservations');
     const loginFormEl = document.getElementById('login-form');
     const loginHeaderEl = document.querySelector('#espace-membre .form-card h3');
@@ -3065,7 +3065,7 @@
     if (loginLeadEl) loginLeadEl.style.display = hasToken ? 'none' : '';
     if (memberReservationsEl) memberReservationsEl.style.display = hasToken ? 'block' : '';
     const profileCard = document.getElementById('profile-card');
-    if (profileCard) profileCard.style.display = (hasToken && !isAdmin) ? 'block' : 'none';
+    if (profileCard) profileCard.style.display = hasToken ? 'block' : 'none';
     updateMessagingVisibility();
   }
   function startMessagesPolling() {
