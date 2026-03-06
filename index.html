@@ -1741,6 +1741,7 @@
         <p class="card-desc">Accès privilégié aux meilleures salles et musées de la région, avec accompagnement et places réservées.</p>
         <div class="card-meta">
           <span>👥 7 personnes</span>
+          <span>🚌 Transport inclus</span>
         </div>
       </div>
     </div>
@@ -1756,6 +1757,7 @@
         <p class="card-desc">Découvrez les saveurs locales, apprenez de nouvelles recettes et partagez un repas convivial.</p>
         <div class="card-meta">
           <span>👥 7 personnes</span>
+          <span>🚌 Transport inclus</span>
         </div>
       </div>
     </div>
@@ -1771,6 +1773,7 @@
         <p class="card-desc">Exprimez votre créativité dans une ambiance détendue, encadrés par des artistes passionnés.</p>
         <div class="card-meta">
           <span>👥 7 personnes</span>
+          <span>🚌 Transport inclus</span>
         </div>
       </div>
     </div>
@@ -1815,7 +1818,9 @@
       </div>
     </div>
     <div class="steps-visual">
-      <div class="visual-circle">🌸</div>
+      <div class="visual-circle">
+        <img src="haut du site.jpg" alt="Illustration" style="width:100%;height:100%;object-fit:cover;">
+      </div>
       <div class="floating-card fc1">
         <span class="fc-dot"></span> Prochaine sortie dans <strong>3 jours</strong>
       </div>
@@ -2522,6 +2527,7 @@
             <p class="card-desc">${safeDesc}</p>
             <div class="card-meta">
               <span>${safeDate}</span>${safeLieu ? '<span> • ' + safeLieu + '</span>' : ''}${s.tarif ? '<span> • Tarif: ' + String(s.tarif) + '</span>' : ''}
+              <span> • 🚌 Transport inclus</span>
             </div>
             <div style="margin-top:1rem;display:flex;gap:.5rem;align-items:center;justify-content:space-between;flex-wrap:wrap;">
               <a href="#espace-membre" class="btn-primary sortie-reserver" data-id="${id}" data-titre="${encodeURIComponent(safeTitre)}">Réserver</a>
