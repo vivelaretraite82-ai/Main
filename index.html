@@ -3254,8 +3254,9 @@
             setMemberStatus(msg);
           }
         })
-        .catch(() => {
-          setMemberStatus('Erreur réseau. Merci de réessayer.');
+        .catch((err) => {
+          console.error('Erreur login:', err);
+          setMemberStatus('Erreur réseau. Merci de réessayer. (' + (err.message || 'inconnue') + ')');
         });
     });
   }
