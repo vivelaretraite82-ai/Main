@@ -358,6 +358,12 @@ if (!USE_PG) {
   ensureAdminUser();
 }
 
+// Log middleware for debugging CORS
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} - Origin: ${req.headers.origin}`);
+  next();
+});
+
 app.use(cors({
   origin: [
     'http://localhost:3000',
@@ -366,10 +372,11 @@ app.use(cors({
     'https://lespetitesvirees.fr',
     'https://www.lespetitesvirees.fr'
   ],
+  credentials: true,
   methods: ['GET', 'POST', 'DELETE', 'PUT', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-app.options('*', cors());
+// app.options('*', cors()); // Handled by global middleware
 
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.json({ limit: '50mb' }));
