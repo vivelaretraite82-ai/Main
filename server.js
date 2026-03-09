@@ -359,7 +359,13 @@ if (!USE_PG) {
 }
 
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://vivelaretraite82-ai.github.io'],
+  origin: [
+    'http://localhost:3000',
+    'https://vivelaretraite82-ai.github.io',
+    'http://lespetitesvirees.fr',
+    'https://lespetitesvirees.fr',
+    'https://www.lespetitesvirees.fr'
+  ],
   methods: ['GET', 'POST', 'DELETE', 'PUT', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
