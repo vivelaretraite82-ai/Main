@@ -1480,6 +1480,7 @@
       <li id="nav-profile-item"><a href="profil.html">Profil</a></li>
       <li><a href="messages.html" id="nav-messages-link" target="_blank">Messagerie<span id="nav-messages-badge" class="nav-badge" style="display:none;">●</span></a></li>
       <li><a href="#contact" class="nav-cta">Contact</a></li>
+      <li id="nav-annuaire-item" style="display:none;"><a href="annuaire.html">Annuaire</a></li>
       <li id="nav-admin-item" style="display:none;"><a href="#admin-panel">Admin</a></li>
     </ul>
     <button type="button" id="nav-login" class="nav-cta" style="background:transparent;color:var(--text);border:1px solid var(--border);">Connexion</button>
@@ -1504,6 +1505,7 @@
       <li id="nav-profile-item-mobile"><a href="profil.html">Profil</a></li>
       <li><a href="messages.html" id="nav-messages-link-mobile" target="_blank">Messagerie<span id="nav-messages-badge-mobile" class="nav-badge" style="display:none;">●</span></a></li>
       <li><a href="#contact">Contact</a></li>
+      <li id="nav-annuaire-item-mobile" style="display:none;"><a href="annuaire.html">Annuaire</a></li>
       <li id="nav-admin-item-mobile" style="display:none;"><a href="#admin-panel">Admin</a></li>
     </ul>
   </div>
@@ -3042,6 +3044,8 @@
 
   const navLoginBtn = document.getElementById('nav-login');
   const navLogoutBtn = document.getElementById('nav-logout');
+  const navAnnuaireItem = document.getElementById('nav-annuaire-item');
+  const navAnnuaireItemMobile = document.getElementById('nav-annuaire-item-mobile');
   const navAdminItem = document.getElementById('nav-admin-item');
   const navAdminItemMobile = document.getElementById('nav-admin-item-mobile');
   const navProfileItem = document.getElementById('nav-profile-item');
@@ -3059,6 +3063,8 @@
     if (navProfileItem) navProfileItem.style.display = '';
     if (navProfileItemMobile) navProfileItemMobile.style.display = 'list-item';
     const isAdmin = !!(currentUser && [''+ADMIN_EMAIL, ''+ADMIN_EMAIL2].includes(String(currentUser.email || '').trim().toLowerCase()));
+    if (navAnnuaireItem) navAnnuaireItem.style.display = isAdmin ? 'inline-block' : 'none';
+    if (navAnnuaireItemMobile) navAnnuaireItemMobile.style.display = isAdmin ? 'list-item' : 'none';
     if (navAdminItem) navAdminItem.style.display = isAdmin ? 'inline-block' : 'none';
     if (navAdminItemMobile) navAdminItemMobile.style.display = isAdmin ? 'list-item' : 'none';
     if (adminPanel) adminPanel.style.display = isAdmin ? 'block' : 'none';

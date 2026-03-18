@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Annuaire — Les Petites Virées</title>
+  <link rel="icon" href="logo.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="logo.ico">
+  <style>
+    :root {
+      --bg: #0E1111;
+      --card: #121616;
+      --text: #F3F3F0;
+      --text-light: #C6C6C0;
+      --gold: #D5BA7B;
+      --border: rgba(255,255,255,0.08);
+      --accent: #7ec8a2;
+      --danger: #ff6b6b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      line-height: 1.5;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      background: rgba(14,17,17,0.8);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      padding: .75rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      z-index: 10;
+    }
+    .brand { font-weight: 700; letter-spacing: .3px; }
+    .brand em { color: var(--gold); font-style: normal; }
+    .back-link { color: var(--text-light); text-decoration: none; }
+    .container { max-width: 1100px; margin: 1rem auto; padding: 0 1rem; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1rem; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between; }
+    .search { flex: 1; min-width: 220px; display: flex; gap: .5rem; align-items: center; }
+    .search input {
+      width: 100%;
+      padding: .65rem .75rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      outline: none;
+    }
+    .meta { color: var(--text-light); font-size: .9rem; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      text-align: left;
+      font-size: .8rem;
+      letter-spacing: .2px;
+      color: var(--text-light);
+      padding: .7rem .6rem;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    tbody td {
+      padding: .7rem .6rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      vertical-align: top;
+    }
+    tbody tr:hover { background: rgba(255,255,255,0.03); }
+    .empty { padding: 1rem 0; color: var(--text-light); }
+    .status { margin-top: .75rem; color: var(--text-light); }
+    .status.error { color: var(--danger); }
+    @media (max-width: 720px) {
+      thead { display: none; }
+      table, tbody, tr, td { display: block; width: 100%; }
+      tbody tr { border-bottom: 1px solid var(--border); padding: .6rem 0; }
+      tbody td { border: 0; padding: .15rem 0; }
+      tbody td[data-label]::before {
+        content: attr(data-label) " : ";
+        color: var(--text-light);
+        font-size: .85rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back-link" href="index.html">← Retour</a>
+    <div class="brand">Les Petites <em>Virées</em></div>
+    <div style="width:64px"></div>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <div class="toolbar">
+        <div>
+          <h1 style="margin:.2rem 0 0 0;font-size:1.35rem;">Annuaire</h1>
+          <div class="meta" id="count">Chargement…</div>
+        </div>
+        <div class="search">
+          <input id="search" placeholder="Rechercher un nom, prénom ou téléphone…" autocomplete="off">
+        </div>
+      </div>
+
+      <div id="status" class="status"></div>
+      <div id="wrap"></div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'https://backend-1-cil0.onrender.com';
+    const authToken = window.localStorage.getItem('vivelaretraite-token') || '';
+    const wrap = document.getElementById('wrap');
+    const statusEl = document.getElementById('status');
+    const countEl = document.getElementById('count');
+    const searchEl = document.getElementById('search');
+    let allUsers = [];
+
+    function setStatus(msg, isError) {
+      statusEl.textContent = msg || '';
+      statusEl.className = 'status' + (isError ? ' error' : '');
+    }
+
+    function computeAge(naissance) {
+      if (!naissance) return '';
+      const d = new Date(String(naissance));
+      if (Number.isNaN(d.getTime())) return '';
+      const now = new Date();
+      let age = now.getFullYear() - d.getFullYear();
+      const m = now.getMonth() - d.getMonth();
+      if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age -= 1;
+      if (age < 0 || age > 120) return '';
+      return String(age);
+    }
+
+    function normalize(s) {
+      return String(s || '').trim().toLowerCase();
+    }
+
+    function render(users) {
+      const q = normalize(searchEl.value);
+      const rows = q ? users.filter(u => {
+        const hay = [
+          u.nom,
+          u.prenom,
+          u.telephone
+        ].map(normalize).join(' ');
+        return hay.includes(q);
+      }) : users;
+
+      countEl.textContent = rows.length + ' inscrit(s)';
+      if (!rows.length) {
+        wrap.innerHTML = '<div class="empty">Aucun résultat.</div>';
+        return;
+      }
+      const table = document.createElement('table');
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Prénom</th>
+            <th>Âge</th>
+            <th>Téléphone</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(u => {
+            const nom = u.nom ? String(u.nom) : '';
+            const prenom = u.prenom ? String(u.prenom) : '';
+            const tel = u.telephone ? String(u.telephone) : '';
+            const age = computeAge(u.naissance);
+            return `
+              <tr>
+                <td data-label="Nom">${nom}</td>
+                <td data-label="Prénom">${prenom}</td>
+                <td data-label="Âge">${age}</td>
+                <td data-label="Téléphone">${tel}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      `;
+      wrap.innerHTML = '';
+      wrap.appendChild(table);
+    }
+
+    function requireAdminAndLoad() {
+      if (!authToken) {
+        setStatus('Accès réservé aux administrateurs. Veuillez vous connecter.', true);
+        wrap.innerHTML = '<div class="empty"><a class="back-link" href="index.html">Retour au site</a></div>';
+        countEl.textContent = '';
+        return;
+      }
+      fetch(API_BASE + '/me', { headers: { Authorization: 'Bearer ' + authToken } })
+        .then(r => r.ok ? r.json() : Promise.reject(new Error('unauthorized')))
+        .then(me => {
+          if (!me || !me.isAdmin) throw new Error('admin_only');
+          return fetch(API_BASE + '/admin/users', { headers: { Authorization: 'Bearer ' + authToken } });
+        })
+        .then(r => r.ok ? r.json() : Promise.reject(new Error('fetch_failed')))
+        .then(rows => {
+          allUsers = Array.isArray(rows) ? rows : [];
+          setStatus('');
+          render(allUsers);
+        })
+        .catch((err) => {
+          const code = err && err.message ? String(err.message) : 'error';
+          const msg = code === 'admin_only'
+            ? 'Accès réservé aux administrateurs.'
+            : 'Impossible de charger l’annuaire.';
+          setStatus(msg, true);
+          wrap.innerHTML = '<div class="empty"><a class="back-link" href="index.html">Retour au site</a></div>';
+          countEl.textContent = '';
+        });
+    }
+
+    searchEl.addEventListener('input', () => render(allUsers));
+    requireAdminAndLoad();
+  </script>
+</body>
+</html>

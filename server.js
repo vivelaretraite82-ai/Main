@@ -885,6 +885,30 @@ app.get('/admin/reservations', auth, requireAdmin, (req, res) => {
   });
 });
 
+app.get('/admin/users', auth, requireAdmin, async (req, res) => {
+  if (USE_PG) {
+    try {
+      const { rows } = await pgPool.query(
+        `SELECT id, email, prenom, nom, telephone, naissance, created_at
+         FROM users
+         ORDER BY created_at DESC NULLS LAST, id DESC
+         LIMIT 5000`
+      );
+      return res.json(rows);
+    } catch {
+      return res.status(500).json({ error: 'db_error' });
+    }
+  }
+  db.all(
+    'SELECT id, email, prenom, nom, telephone, naissance, created_at FROM users ORDER BY created_at DESC, id DESC LIMIT 5000',
+    [],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: 'db_error' });
+      res.json(rows);
+    }
+  );
+});
+
 app.post('/admin/api/sorties', auth, requireAdmin, (req, res) => {
   const { titre, description, date_iso, lieu, categorie, tarif, image_base64 } = req.body || {};
   if (!titre || !String(titre).trim()) return res.status(400).json({ error: 'titre_required' });
