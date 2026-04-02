@@ -12,82 +12,105 @@ const DATA_DIR = process.env.DATA_DIR || __dirname;
 try { if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true }); } catch {}
 const DB_PATH = path.join(DATA_DIR, 'vivelaretraite.db');
 
-let Pool;
-try { ({ Pool } = require('pg')); } catch {}
-const USE_PG = !!((process.env.DATABASE_URL && Pool) || (process.env.PGHOST && Pool));
-if (process.env.RENDER && !USE_PG) {
-  console.error('DATABASE_URL manquant ou module pg non disponible. Configuration requise pour éviter la perte de données.');
+let mysql;
+try { mysql = require('mysql2/promise'); } catch {}
+const USE_MYSQL = !!((process.env.DATABASE_URL && mysql) || (process.env.MYSQLHOST && mysql));
+if (process.env.RENDER && !USE_MYSQL) {
+  console.error('DATABASE_URL manquant ou module mysql2 non disponible. Configuration requise pour éviter la perte de données.');
   process.exit(1);
 }
 let db;
-let pgPool;
+let mysqlPool;
 
-function normalizePgSql(sql) {
+function toMySqlQuery(sql, params) {
   let q = sql;
-  if (/insert\s+or\s+ignore/i.test(q)) {
-    q = q.replace(/insert\s+or\s+ignore/i, 'INSERT');
-    if (!/\bon\s+conflict\b/i.test(q)) q += ' ON CONFLICT DO NOTHING';
+  
+  // Convert Postgres/SQLite "ON CONFLICT ... DO UPDATE" to MySQL "ON DUPLICATE KEY UPDATE"
+  if (/on\s+conflict\s*\(\s*email\s*\)\s+do\s+update\s+set/i.test(q)) {
+     q = q.replace(/on\s+conflict\s*\(\s*email\s*\)\s+do\s+update\s+set/i, 'ON DUPLICATE KEY UPDATE');
+     q = q.replace(/excluded\.([a-zA-Z0-9_]+)/gi, 'VALUES($1)');
+     // More specific handling for the multi-column update if needed
+   }
+
+  // Convert "ON CONFLICT (...) DO NOTHING" to "INSERT IGNORE" or just remove it if we use INSERT IGNORE
+  if (/on\s+conflict\s*\(.*?\)\s+do\s+nothing/i.test(q)) {
+    q = q.replace(/^\s*insert\s+/i, 'INSERT IGNORE ');
+    q = q.replace(/on\s+conflict\s*\(.*?\)\s+do\s+nothing/i, '');
   }
-  return q;
+
+  // Convert "ON CONFLICT (...) DO UPDATE SET status = 'active'" to "ON DUPLICATE KEY UPDATE status = 'active'"
+  if (/on\s+conflict\s*\(.*?\)\s+do\s+update\s+set\s+status\s*=\s*'active'/i.test(q)) {
+    q = q.replace(/on\s+conflict\s*\(.*?\)\s+do\s+update\s+set\s+status\s*=\s*'active'/i, "ON DUPLICATE KEY UPDATE status = 'active'");
+  }
+
+  return { text: q, values: params || [] };
 }
 
-function toPgQuery(sql, params) {
-  const values = Array.isArray(params) ? params : [];
-  if (!values.length) {
-    return { text: normalizePgSql(sql), values: [] };
-  }
-  let index = 0;
-  const text = normalizePgSql(sql).replace(/\?/g, () => '$' + (++index));
-  return { text, values };
-}
+if (USE_MYSQL) {
+  const connectionConfig = process.env.DATABASE_URL || {
+    host: process.env.MYSQLHOST || process.env.DB_HOST,
+    user: process.env.MYSQLUSER || process.env.DB_USER,
+    password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD,
+    database: process.env.MYSQLDATABASE || process.env.DB_NAME,
+    port: process.env.MYSQLPORT || process.env.DB_PORT || 3306,
+    ssl: process.env.MYSQLSSLMODE === 'disable' ? false : { rejectUnauthorized: false }
+  };
 
-if (USE_PG) {
-  pgPool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.PGSSLMODE === 'disable' ? false : { rejectUnauthorized: false }
-  });
+  mysqlPool = mysql.createPool(connectionConfig);
+
   db = {
-    all(sql, params, cb) {
+    async all(sql, params, cb) {
       if (typeof params === 'function') { cb = params; params = []; }
-      const { text, values } = toPgQuery(sql, params || []);
-      pgPool.query(text, values)
-        .then(r => cb && cb(null, r.rows))
-        .catch(e => cb && cb(e));
+      const { text, values } = toMySqlQuery(sql, params || []);
+      try {
+        const [rows] = await mysqlPool.execute(text, values);
+        if (cb) cb(null, rows);
+        return rows;
+      } catch (e) {
+        if (cb) cb(e);
+        throw e;
+      }
     },
-    get(sql, params, cb) {
+    async get(sql, params, cb) {
       if (typeof params === 'function') { cb = params; params = []; }
-      const { text, values } = toPgQuery(sql, params || []);
-      pgPool.query(text, values)
-        .then(r => cb && cb(null, r.rows[0] || null))
-        .catch(e => cb && cb(e));
+      const { text, values } = toMySqlQuery(sql, params || []);
+      try {
+        const [rows] = await mysqlPool.execute(text, values);
+        const row = rows[0] || null;
+        if (cb) cb(null, row);
+        return row;
+      } catch (e) {
+        if (cb) cb(e);
+        throw e;
+      }
     },
-    run(sql, params, cb) {
+    async run(sql, params, cb) {
       if (typeof params === 'function') { cb = params; params = []; }
-      let { text, values } = toPgQuery(sql, params || []);
-      const needsReturning = /^\s*insert/i.test(text) && !/\breturning\b/i.test(text);
-      if (needsReturning) text += ' RETURNING id';
-      pgPool.query(text, values)
-        .then(r => {
-          const ctx = { lastID: needsReturning && r.rows[0] ? r.rows[0].id : undefined, changes: r.rowCount };
-          cb && cb.call(ctx, null);
-        })
-        .catch(e => cb && cb(e));
+      const { text, values } = toMySqlQuery(sql, params || []);
+      try {
+        const [result] = await mysqlPool.execute(text, values);
+        const ctx = { lastID: result.insertId, changes: result.affectedRows };
+        if (cb) cb.call(ctx, null);
+        return ctx;
+      } catch (e) {
+        if (cb) cb(e);
+        throw e;
+      }
     },
     prepare(sql) {
       return {
-        run: function() {
+        run: async function() {
           const args = Array.from(arguments);
           const cb = typeof args[args.length - 1] === 'function' ? args.pop() : null;
           const params = args;
-          let { text, values } = toPgQuery(sql, params);
-          const needsReturning = /^\s*insert/i.test(text) && !/\breturning\b/i.test(text);
-          if (needsReturning) text += ' RETURNING id';
-          pgPool.query(text, values)
-            .then(r => {
-              const ctx = { lastID: needsReturning && r.rows[0] ? r.rows[0].id : undefined, changes: r.rowCount };
-              cb && cb.call(ctx, null);
-            })
-            .catch(e => cb && cb(e));
+          const { text, values } = toMySqlQuery(sql, params);
+          try {
+            const [result] = await mysqlPool.execute(text, values);
+            const ctx = { lastID: result.insertId, changes: result.affectedRows };
+            if (cb) cb.call(ctx, null);
+          } catch (e) {
+            if (cb) cb(e);
+          }
         },
         finalize: function() {}
       };
@@ -210,11 +233,11 @@ function ensureAdminUser() {
   );
 }
 
-async function ensurePgSchema() {
-  if (!USE_PG) return;
-  await pgPool.query(`
+async function ensureMySqlSchema() {
+  if (!USE_MYSQL) return;
+  await mysqlPool.query(`
     CREATE TABLE IF NOT EXISTS registrations (
-      id SERIAL PRIMARY KEY,
+      id INT AUTO_INCREMENT PRIMARY KEY,
       prenom TEXT NOT NULL,
       nom TEXT NOT NULL,
       email TEXT NOT NULL,
@@ -222,30 +245,32 @@ async function ensurePgSchema() {
       ville TEXT,
       naissance TEXT,
       preferences TEXT,
-      created_at TIMESTAMPTZ DEFAULT NOW()
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
-  await pgPool.query(`
+  await mysqlPool.query(`
     CREATE TABLE IF NOT EXISTS contacts (
-      id SERIAL PRIMARY KEY,
+      id INT AUTO_INCREMENT PRIMARY KEY,
       nom TEXT NOT NULL,
       email TEXT NOT NULL,
       telephone TEXT,
       message TEXT NOT NULL,
-      created_at TIMESTAMPTZ DEFAULT NOW()
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
-  await pgPool.query(`
+  await mysqlPool.query(`
     CREATE TABLE IF NOT EXISTS users (
-      id SERIAL PRIMARY KEY,
-      email TEXT UNIQUE NOT NULL,
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      email VARCHAR(255) UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
       prenom TEXT,
       nom TEXT,
       telephone TEXT,
-      created_at TIMESTAMPTZ DEFAULT NOW()
+      adresse TEXT,
+      naissance TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
-  await pgPool.query(`
+  await mysqlPool.query(`
     CREATE TABLE IF NOT EXISTS sorties (
-      id SERIAL PRIMARY KEY,
+      id INT AUTO_INCREMENT PRIMARY KEY,
       titre TEXT NOT NULL,
       description TEXT,
       date_iso TEXT,
@@ -253,37 +278,44 @@ async function ensurePgSchema() {
       categorie TEXT,
       image_path TEXT,
       tarif TEXT,
-      created_at TIMESTAMPTZ DEFAULT NOW()
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
-  await pgPool.query(`
+  await mysqlPool.query(`
     CREATE TABLE IF NOT EXISTS reservations (
-      id SERIAL PRIMARY KEY,
-      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      sortie_id INTEGER NOT NULL REFERENCES sorties(id) ON DELETE CASCADE,
-      created_at TIMESTAMPTZ DEFAULT NOW(),
-      UNIQUE(user_id, sortie_id)
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      sortie_id INT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      status VARCHAR(50) DEFAULT 'active',
+      UNIQUE(user_id, sortie_id),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (sortie_id) REFERENCES sorties(id) ON DELETE CASCADE
     )`);
-  await pgPool.query(`
+  await mysqlPool.query(`
     CREATE TABLE IF NOT EXISTS comments (
-      id SERIAL PRIMARY KEY,
-      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      sortie_id INTEGER NOT NULL REFERENCES sorties(id) ON DELETE CASCADE,
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      sortie_id INT NOT NULL,
       text TEXT NOT NULL,
-      created_at TIMESTAMPTZ DEFAULT NOW()
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (sortie_id) REFERENCES sorties(id) ON DELETE CASCADE
     )`);
-  await pgPool.query(`
+  await mysqlPool.query(`
     CREATE TABLE IF NOT EXISTS messages (
-      id SERIAL PRIMARY KEY,
-      sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      recipient_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      sender_id INT NOT NULL,
+      recipient_id INT NOT NULL,
       body TEXT NOT NULL,
-      created_at TIMESTAMPTZ DEFAULT NOW()
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE
     )`);
 }
 
 function ensureReservationStatusColumn() {
-  if (USE_PG) {
-    return pgPool.query(`ALTER TABLE reservations ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active'`)
+  if (USE_MYSQL) {
+    return mysqlPool.query(`ALTER TABLE reservations ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active'`)
       .catch(() => {});
   }
   return new Promise((resolve) => {
@@ -297,8 +329,8 @@ function ensureReservationStatusColumn() {
 }
 
 function ensureSortiesTarifColumn() {
-  if (USE_PG) {
-    return pgPool.query(`ALTER TABLE sorties ADD COLUMN IF NOT EXISTS tarif TEXT`)
+  if (USE_MYSQL) {
+    return mysqlPool.query(`ALTER TABLE sorties ADD COLUMN IF NOT EXISTS tarif TEXT`)
       .catch(() => {});
   }
   return new Promise((resolve) => {
@@ -312,10 +344,10 @@ function ensureSortiesTarifColumn() {
 }
 
 function ensureUserProfileColumns() {
-  if (USE_PG) {
+  if (USE_MYSQL) {
     return Promise.all([
-      pgPool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS adresse TEXT`).catch(() => {}),
-      pgPool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS naissance TEXT`).catch(() => {}),
+      mysqlPool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS adresse TEXT`).catch(() => {}),
+      mysqlPool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS naissance TEXT`).catch(() => {}),
     ]);
   }
   return new Promise((resolve) => {
@@ -324,37 +356,28 @@ function ensureUserProfileColumns() {
     });
   });
 }
-async function ensureAdminUserPg() {
-  if (!USE_PG) return;
+async function ensureAdminUserMySql() {
+  if (!USE_MYSQL) return;
   const primary = (process.env.ADMIN_EMAIL || 'lespetitesvirees@gmail.com').trim().toLowerCase();
   const secondary = (process.env.ADMIN_EMAIL2 || 'vivelaretraite82@gmail.com').trim().toLowerCase();
   const password = process.env.ADMIN_PASSWORD || 'luanamax?';
   const hash = bcrypt.hashSync(password, 10);
   const prenom = 'Alexandra';
   const telephone = '0667095143';
-  await pgPool.query(
-    `INSERT INTO users (email, password_hash, prenom, nom, telephone)
-     VALUES ($1, $2, $3, $4, $5)
-     ON CONFLICT (email) DO UPDATE SET
-       password_hash = EXCLUDED.password_hash,
-       prenom = COALESCE(EXCLUDED.prenom, users.prenom),
-       nom = COALESCE(EXCLUDED.nom, users.nom),
-       telephone = COALESCE(EXCLUDED.telephone, users.telephone)`,
-    [primary, hash, prenom, null, telephone]
-  );
-  await pgPool.query(
-    `INSERT INTO users (email, password_hash, prenom, nom, telephone)
-     VALUES ($1, $2, $3, $4, $5)
-     ON CONFLICT (email) DO UPDATE SET
-       password_hash = EXCLUDED.password_hash,
-       prenom = COALESCE(EXCLUDED.prenom, users.prenom),
-       nom = COALESCE(EXCLUDED.nom, users.nom),
-       telephone = COALESCE(EXCLUDED.telephone, users.telephone)`,
-    [secondary, hash, prenom, null, telephone]
-  );
+  
+  const sql = `INSERT INTO users (email, password_hash, prenom, nom, telephone)
+     VALUES (?, ?, ?, ?, ?)
+     ON DUPLICATE KEY UPDATE
+       password_hash = VALUES(password_hash),
+       prenom = COALESCE(VALUES(prenom), users.prenom),
+       nom = COALESCE(VALUES(nom), users.nom),
+       telephone = COALESCE(VALUES(telephone), users.telephone)`;
+
+  await mysqlPool.query(sql, [primary, hash, prenom, null, telephone]);
+  await mysqlPool.query(sql, [secondary, hash, prenom, null, telephone]);
 }
 
-if (!USE_PG) {
+if (!USE_MYSQL) {
   ensureAdminUser();
 }
 
@@ -601,7 +624,7 @@ function saveBase64Image(dataUrl) {
   const buf = Buffer.from(base64, 'base64');
   // basic server-side size guard ~5MB
   if (buf.length > 5 * 1024 * 1024) return null;
-  if (USE_PG) {
+  if (USE_MYSQL) {
     return dataUrl;
   }
   const uploadsDir = ensureUploadsDir();
@@ -886,12 +909,12 @@ app.get('/admin/reservations', auth, requireAdmin, (req, res) => {
 });
 
 app.get('/admin/users', auth, requireAdmin, async (req, res) => {
-  if (USE_PG) {
+  if (USE_MYSQL) {
     try {
-      const { rows } = await pgPool.query(
+      const [rows] = await mysqlPool.query(
         `SELECT id, email, prenom, nom, telephone, naissance, created_at
          FROM users
-         ORDER BY created_at DESC NULLS LAST, id DESC
+         ORDER BY created_at DESC, id DESC
          LIMIT 5000`
       );
       return res.json(rows);
@@ -1047,15 +1070,15 @@ function scheduleSelfPing() {
 const PREFERRED_PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 async function bootstrap() {
-  if (USE_PG) {
+  if (USE_MYSQL) {
     try {
-      await ensurePgSchema();
-      await ensureAdminUserPg();
+      await ensureMySqlSchema();
+      await ensureAdminUserMySql();
       await ensureReservationStatusColumn();
       await ensureSortiesTarifColumn();
       await ensureUserProfileColumns();
     } catch (e) {
-      console.error('Erreur initialisation PostgreSQL:', e);
+      console.error('Erreur initialisation MySQL:', e);
       process.exit(1);
     }
   } else {
