@@ -11,20 +11,20 @@
 <link rel="apple-touch-icon" href="logo.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 
 <style>
   :root {
-    --sage: #7A9E7E;
-    --sage-light: #B8D4BB;
-    --sage-dark: #4A6E4E;
-    --cream: #FAF7F2;
-    --warm-white: #F5F0E8;
-    --text: #2C2C2C;
-    --text-light: #6B6B6B;
-    --gold: #C9A96E;
-    --gold-light: #E8D5B0;
-    --border: #E0D8CC;
+    --sage: #6E9472;
+    --sage-light: #B2CEB5;
+    --sage-dark: #3E6342;
+    --cream: #FAFAF7;
+    --warm-white: #F3EFE8;
+    --text: #181818;
+    --text-light: #767676;
+    --gold: #C4975A;
+    --gold-light: #E5D4B8;
+    --border: #E0D9CE;
   }
 
   body[data-theme="dark"] {
@@ -65,12 +65,13 @@
   html { scroll-behavior: smooth; }
 
   body {
-    font-family: 'Jost', sans-serif;
+    font-family: 'DM Sans', sans-serif;
     font-weight: 300;
     background: var(--cream);
     color: var(--text);
     overflow-x: hidden;
-    font-size: 18px;
+    font-size: 17px;
+    -webkit-font-smoothing: antialiased;
   }
 
   /* ── NAV ── */
@@ -81,19 +82,19 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.4rem 4rem;
-    background: rgba(15,18,16,0.92);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
+    padding: 1.2rem 4rem;
+    background: rgba(10,14,11,0.95);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
     transition: padding .3s;
   }
 
   .nav-logo {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 1.6rem;
+    font-size: 1.55rem;
     font-weight: 400;
-    color: #b9d7b9;
-    letter-spacing: .04em;
+    color: #c8dfc9;
+    letter-spacing: .03em;
     position: relative;
     display: inline-block;
     line-height: 1;
@@ -356,30 +357,32 @@
     display: inline-flex;
     align-items: center;
     gap: .5rem;
-    font-size: .72rem;
-    letter-spacing: .18em;
+    font-size: .68rem;
+    letter-spacing: .2em;
     text-transform: uppercase;
     color: var(--sage-dark);
-    margin-bottom: 1.8rem;
+    margin-bottom: 2rem;
     opacity: 0;
     animation: fadeUp .8s .2s forwards;
+    font-weight: 500;
   }
 
   .hero-tag::before {
     content: '';
-    width: 28px; height: 1px;
+    width: 24px; height: 1px;
     background: var(--gold);
   }
 
   .hero h1 {
     font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(2.8rem, 4.5vw, 4.2rem);
+    font-size: clamp(2.9rem, 4.5vw, 4.4rem);
     font-weight: 300;
-    line-height: 1.15;
+    line-height: 1.12;
     color: var(--text);
-    margin-bottom: 1.6rem;
+    margin-bottom: 1.8rem;
     opacity: 0;
     animation: fadeUp .9s .35s forwards;
+    letter-spacing: -.02em;
   }
 
   .hero h1 em {
@@ -410,13 +413,14 @@
     display: inline-block;
     background: var(--sage-dark);
     color: #fff;
-    padding: .85rem 2.2rem;
+    padding: .9rem 2.4rem;
     text-decoration: none;
-    font-size: .82rem;
-    letter-spacing: .14em;
+    font-size: .78rem;
+    letter-spacing: .16em;
     text-transform: uppercase;
     border-radius: 2px;
     transition: background .25s, transform .2s;
+    font-weight: 500;
   }
   .btn-primary:hover { background: var(--sage); transform: translateY(-2px); }
 
@@ -516,32 +520,34 @@
     gap: 0;
     border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
-    background: var(--warm-white);
+    background: #fff;
     overflow: hidden;
   }
 
   .stat-item {
     flex: 1;
-    padding: 2.5rem 3rem;
+    padding: 3rem 2rem;
     text-align: center;
     border-right: 1px solid var(--border);
     transition: background .3s;
+    position: relative;
   }
   .stat-item:last-child { border-right: none; }
   .stat-item:hover { background: var(--cream); }
 
   .stat-num {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 2.8rem;
+    font-size: 3.2rem;
     font-weight: 300;
     color: var(--sage-dark);
     line-height: 1;
-    margin-bottom: .3rem;
+    margin-bottom: .4rem;
+    letter-spacing: -.02em;
   }
 
   .stat-label {
-    font-size: .75rem;
-    letter-spacing: .12em;
+    font-size: .72rem;
+    letter-spacing: .15em;
     text-transform: uppercase;
     color: var(--text-light);
   }
@@ -550,38 +556,40 @@
   section { padding: 7rem 4rem; }
 
   .section-tag {
-    font-size: .72rem;
-    letter-spacing: .2em;
+    font-size: .68rem;
+    letter-spacing: .22em;
     text-transform: uppercase;
     color: var(--gold);
-    margin-bottom: 1rem;
+    margin-bottom: 1.1rem;
     display: flex;
     align-items: center;
     gap: .6rem;
+    font-weight: 500;
   }
 
   .section-tag::after {
     content: '';
     flex: 1;
-    max-width: 40px;
+    max-width: 32px;
     height: 1px;
     background: var(--gold-light);
   }
 
   .section-title {
     font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(2rem, 3vw, 2.8rem);
+    font-size: clamp(2.1rem, 3vw, 2.9rem);
     font-weight: 300;
-    line-height: 1.25;
+    line-height: 1.2;
     color: var(--text);
-    margin-bottom: 1rem;
+    margin-bottom: 1.1rem;
+    letter-spacing: -.01em;
   }
 
   .section-title em { font-style: italic; color: var(--sage-dark); }
 
   .section-sub {
-    font-size: .95rem;
-    line-height: 1.8;
+    font-size: .92rem;
+    line-height: 1.85;
     color: var(--text-light);
     max-width: 500px;
   }
@@ -653,15 +661,15 @@
   .activity-card {
     background: #fff;
     border: 1px solid var(--border);
-    border-radius: 4px;
+    border-radius: 6px;
     overflow: hidden;
-    transition: transform .3s, box-shadow .3s;
+    transition: transform .35s cubic-bezier(.25,.8,.25,1), box-shadow .35s;
     cursor: pointer;
   }
 
   .activity-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 20px 50px rgba(0,0,0,.08);
+    transform: translateY(-8px);
+    box-shadow: 0 24px 56px rgba(0,0,0,.09);
   }
 
   .activity-card:first-child {
@@ -851,8 +859,8 @@
   .testimonial-card {
     background: #fff;
     border: 1px solid var(--border);
-    padding: 2.2rem;
-    border-radius: 4px;
+    padding: 2.4rem;
+    border-radius: 6px;
     position: relative;
     transition: box-shadow .3s;
   }
@@ -1110,10 +1118,10 @@
 
   .form-card {
     background: #fff;
-    border-radius: 4px;
+    border-radius: 8px;
     border: 1px solid var(--border);
-    padding: 2rem;
-    box-shadow: 0 14px 40px rgba(0,0,0,.18);
+    padding: 2.2rem;
+    box-shadow: 0 12px 40px rgba(0,0,0,.12);
   }
 
   .form-card h3 {
@@ -1337,12 +1345,13 @@
 
   /* ── FOOTER ── */
   footer {
-    background: #1E2820;
-    color: rgba(255,255,255,.5);
-    padding: 4rem;
+    background: #141A16;
+    color: rgba(255,255,255,.45);
+    padding: 5rem 4rem 4rem;
     display: grid;
     grid-template-columns: 2fr 1fr 1fr;
     gap: 3rem;
+    border-top: 1px solid rgba(255,255,255,.06);
   }
 
   .footer-brand .nav-logo {
@@ -1385,13 +1394,14 @@
   .footer-col ul a:hover { color: var(--sage-light); }
 
   .footer-bottom {
-    background: #161D18;
-    padding: 1.2rem 4rem;
+    background: #0E1310;
+    padding: 1.4rem 4rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 1.125rem;
-    color: rgba(255,255,255,.3);
+    font-size: .78rem;
+    color: rgba(255,255,255,.25);
+    letter-spacing: .04em;
   }
 
   /* ── ANIMATIONS ── */
@@ -1699,8 +1709,12 @@
     <div class="stat-label">Types d'activités</div>
   </div>
   <div class="stat-item reveal">
-    <div class="stat-num">98%</div>
-    <div class="stat-label">Satisfaction</div>
+    <div class="stat-num">7</div>
+    <div class="stat-label">Personnes par sortie</div>
+  </div>
+  <div class="stat-item reveal">
+    <div class="stat-num">100%</div>
+    <div class="stat-label">Transport inclus</div>
   </div>
 </div>
 
